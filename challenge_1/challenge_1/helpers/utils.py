@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 import shutil
@@ -6,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
-import inspect
+
 from challenge_1.models.base_model import TrainableModel
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,10 +19,10 @@ import tensorflow as tf
 class Model:
     def __init__(self, path):
         self.model = tf.keras.models.load_model(os.path.join(path, 'SubmissionModel'))
-    
 """
 
-def prepare_submission(model: Model, save_path: Path) -> None:
+
+def prepare_submission(model: TrainableModel, save_path: Path) -> None:
     """
     Prepare the submission for the challenge.
 
@@ -36,7 +37,9 @@ def prepare_submission(model: Model, save_path: Path) -> None:
     with TemporaryDirectory() as tmpdir:
         model.save(Path(tmpdir) / "SubmissionModel")
         (Path(tmpdir) / "metadata").write_text(_METADATA_FILE_CONTENT)
-        (Path(tmpdir) / "model.py").write_text(_MODEL_FILE_CONTENT + inspect.getsource(model.predict))
+        (Path(tmpdir) / "model.py").write_text(
+            _MODEL_FILE_CONTENT + inspect.getsource(model.predict)
+        )
 
         shutil.make_archive((out_dir / "submission").as_posix(), "zip", tmpdir)
 

@@ -1,7 +1,6 @@
+import abc
 from pathlib import Path
 from typing import Any
-import abc
-import tensorflow as tf
 
 
 class TrainableModel(abc.ABC):
@@ -11,12 +10,6 @@ class TrainableModel(abc.ABC):
     @property
     def model(self) -> str:
         """Return the model of this instance."""
-        pass
-
-    @abc.abstractmethod
-    @property
-    def model_file(self) -> str:
-        """Return the model file as a string."""
         pass
 
     @abc.abstractmethod
@@ -39,5 +32,3 @@ class TrainableModel(abc.ABC):
     def predict(self, X: Any) -> Any:
         """Predict the output for the given input."""
         pass
-
-
