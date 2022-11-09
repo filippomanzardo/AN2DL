@@ -7,6 +7,8 @@ import tensorflow as tf
 
 class TrainableModel(abc.ABC):
     """An abstract trainable model."""
+    def __init__(self) -> None:
+        self._stats: dict[str, Any] = {}
 
     @property
     def model(self) -> tf.keras.models.Model:
@@ -16,46 +18,50 @@ class TrainableModel(abc.ABC):
     @property
     def stats(self) -> dict[str, Any]:
         """Return the stats of the model."""
-        raise NotImplementedError
+        return self._stats
 
     @abc.abstractmethod
     def save(self, path: Path) -> None:
-        """Save the model to the given path."""
+        """
+        Save the model to the given path.
+
+        :param path: The path to save the model to.
+        """
 
     @abc.abstractmethod
-    def train(self, X: Any, y: Any) -> None:
-        """Train the model."""
+    def train(
+        self,
+        training_set: Any,
+        validation_set: Any,
+        test_set: Any | None = None,
+        epochs: int = 10,
+        verbose: int = 1,
+    ) -> tf.keras.callbacks.History:
+        """
+        Train the model.
+
+        :param training_set: The training set.
+        :param validation_set: The validation set.
+        :param test_set: The test set.
+        :param epochs: The number of epochs to train for.
+        :param verbose: The verbosity of the training.
+        :return: The history of the training.
+        """
+
+    @abc.abstractmethod
+    def preprocess(self, X: Any) -> Any:
+        """
+        Preprocess the input.
+
+        :param X: The input.
+        :return: The preprocessed input.
+        """
 
     @abc.abstractmethod
     def predict(self, X: Any) -> Any:
-        """Predict the output for the given input."""
+        """
+        Predict the output for the given input.
 
-
-class CopilotModel(TrainableModel):
-    """A model that can be trained and used to predict."""
-
-    def __init__(self, model: tf.keras.models.Model) -> None:
-        self._model = model
-
-    @property
-    def model(self) -> tf.keras.models.Model:
-        """Return the model of this instance."""
-        return self._model
-
-    @property
-    def stats(self) -> dict[str, Any]:
-        """Return the stats of the model."""
-        return {"model": "test"}
-
-    def save(self, path: Path) -> None:
-        """Save the model to the given path."""
-        self._model.save(path)
-
-    def train(self, X: Any, y: Any) -> None:
-        """Train the model."""
-        raise NotImplementedError
-
-    def predict(self, X: Any) -> Any:
-        """Predict the output for the given input."""
-
-        return self._model.predict(X)
+        :param X: The input.
+        :return: The output.
+        """
