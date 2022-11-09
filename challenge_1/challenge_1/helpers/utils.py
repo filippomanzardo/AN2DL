@@ -43,7 +43,7 @@ def prepare_submission(model: TrainableModel, save_path: Path) -> None:
 
         shutil.make_archive((out_dir / "submission").as_posix(), "zip", tmpdir)
 
-    (Path(out_dir) / "metadata.json").write_text(json.dumps(metadata))
+    (Path(out_dir) / "metadata.json").write_text(json.dumps(metadata, indent=4))
 
     _LOGGER.info("✅ Submission ID: %s, saved to %s ✅", metadata["id"], out_dir)
 
