@@ -6,6 +6,10 @@ authors = ["Filippo Manzardo <film@bendingspoons.com>"]
 readme = "README.md"
 packages = [{include = "challenge_1"}]
 
+
+[tool.poetry.scripts]
+main = "challenge_1.main:main"
+
 [tool.poetry.dependencies]
 python = "~3.10"
 
