@@ -64,7 +64,14 @@ class CopilotModel(TrainableModel):
             verbose=verbose,
         )
 
-        self.stats["history"] = history
+        self.stats["train_params"] = history.params
+        self.stats["final_stats"] = {
+            "train_loss": history.history["loss"][-1],
+            "train_accuracy": history.history["categorical_accuracy"][-1],
+            "val_loss": history.history["val_loss"][-1],
+            "val_accuracy": history.history["val_categorical_accuracy"][-1],
+        }
+        self.stats["train_history"] = history.history
 
         if test_set:
             loss, accuracy = self._model.evaluate(test_set)

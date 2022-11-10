@@ -45,7 +45,7 @@ def prepare_submission(model: TrainableModel, save_path: Path) -> None:
 
     (Path(out_dir) / "metadata.json").write_text(json.dumps(metadata, indent=4))
 
-    _LOGGER.info("✅ Submission ID: %s, saved to %s ✅", metadata["id"], out_dir)
+    _LOGGER.info("✅ Submission ID: %s saved to %s ✅", metadata["id"], out_dir)
 
 
 def _generate_metadata(stats: dict[str, Any]) -> dict[str, Any]:
