@@ -30,7 +30,7 @@ def prepare_submission(model: TrainableModel, save_path: Path) -> None:
     """
     metadata = _generate_metadata(model.stats)
     out_dir = save_path / (
-        f"{model.__class__.__name__}_submission_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+        f"{model.__class__.__name__}_" + datetime.now().strftime("%Y%m%d_%H%M%S")
     )
     out_dir.mkdir(parents=True, exist_ok=True)
 

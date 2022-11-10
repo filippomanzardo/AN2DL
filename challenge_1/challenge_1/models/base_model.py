@@ -4,6 +4,8 @@ from typing import Any
 
 import tensorflow as tf
 
+from challenge_1.runtime.log import restore_stdout
+
 
 class TrainableModel(abc.ABC):
     """An abstract trainable model."""

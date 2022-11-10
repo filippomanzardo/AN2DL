@@ -4,6 +4,7 @@ from typing import Any
 import tensorflow as tf
 
 from challenge_1.models.base_model import TrainableModel
+from challenge_1.runtime.log import restore_stdout
 
 
 class CopilotModel(TrainableModel):
@@ -46,6 +47,7 @@ class CopilotModel(TrainableModel):
         """Save the model to the given path."""
         self._model.save(path)
 
+    @restore_stdout
     def train(
         self,
         training_set: Any,

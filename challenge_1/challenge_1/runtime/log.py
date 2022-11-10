@@ -1,11 +1,13 @@
 import logging
 import sys
 import warnings
+from contextlib import contextmanager
 from typing import Any
 
 import colorlog
 
 warnings.filterwarnings("ignore")
+_STDOUT = sys.stdout
 
 
 class StreamToLogger(object):
@@ -52,6 +54,20 @@ def _get_color_formatter(entity: str, color: str) -> logging.Formatter:
     )
 
 
+def restore_stdout(func: Any) -> Any:
+    def wrapper(*args: Any, **kwargs: Any) -> None:
+        """Restore the stdout stream."""
+        current_stdout = sys.stdout
+        sys.stdout = _STDOUT
+        try:
+            func(*args, **kwargs)
+        finally:
+            print()
+        sys.stdout = current_stdout
+
+    return wrapper
+
+
 def setup(
     log_level: str | int,
 ) -> None:
@@ -67,8 +83,8 @@ def setup(
     root_logger.addHandler(handler)
     root_logger.setLevel(log_level)
 
-    # stdout_logger = logging.getLogger("STDOUT")
-    # sys.stdout = StreamToLogger(stdout_logger, logging.INFO)
+    stdout_logger = logging.getLogger("STDOUT")
+    sys.stdout = StreamToLogger(stdout_logger, logging.INFO)
 
     tf_logger = logging.getLogger("tensorflow")
     tf_logger.setLevel(logging.ERROR)
