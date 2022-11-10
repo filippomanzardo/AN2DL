@@ -1,7 +1,6 @@
 import logging
 import sys
 import warnings
-from contextlib import contextmanager
 from typing import Any
 
 import colorlog
@@ -84,7 +83,7 @@ def setup(
     root_logger.setLevel(log_level)
 
     stdout_logger = logging.getLogger("STDOUT")
-    sys.stdout = StreamToLogger(stdout_logger, logging.INFO)
+    sys.stdout = StreamToLogger(stdout_logger, logging.INFO)  # type: ignore
 
     tf_logger = logging.getLogger("tensorflow")
     tf_logger.setLevel(logging.ERROR)
