@@ -12,7 +12,15 @@ _DATASET_DIRECTORY = Path(".") / "dataset"
 
 def train_net(net_name: str, epochs: int) -> None:
     generator = tf.keras.preprocessing.image.ImageDataGenerator(
-        rescale=1.0 / 255, validation_split=0.25
+        validation_split=0.25,
+        rotation_range=20,
+        height_shift_range=0.3,
+        width_shift_range=0.4,
+        zoom_range=0.4,
+        horizontal_flip=True,
+        vertical_flip=True,
+        brightness_range=[0.3, 1.4],
+        fill_mode="nearest",
     )
 
     _LOGGER.info("📂 Loading dataset from %s 📂", _DATASET_DIRECTORY)
@@ -30,9 +38,10 @@ def train_net(net_name: str, epochs: int) -> None:
         color_mode="rgb",
         subset="validation",
         save_format="jpg",
+        shuffle=False,
     )
 
-    model = NET_TO_MODEL[net_name]()
+    model = NET_TO_MODEL[net_name]()  # type: ignore[abstract]
 
     _LOGGER.info("🏃‍♂️ Training model 🏃‍♂️")
 
@@ -41,5 +50,14 @@ def train_net(net_name: str, epochs: int) -> None:
     except KeyboardInterrupt:
         _LOGGER.warning("🛑 Training interrupted 🛑")
         return
+    except Exception:
+        _LOGGER.exception("❌ Training failed ❌")
+        model.save(Path(".") / "failed_models")
+        raise
 
-    prepare_submission(model, Path("submissions"))
+    try:
+        prepare_submission(model, Path("submissions"))
+    except Exception:
+        _LOGGER.exception("❌ Training failed ❌")
+        model.save(Path(".") / "failed_models")
+        raise
