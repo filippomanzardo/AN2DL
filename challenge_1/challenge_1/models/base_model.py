@@ -45,6 +45,11 @@ class TrainableModel:
         return ["os", "tensorflow as tf", ("typing", "Any")]
 
     @property
+    def dependencies(self) -> list[str]:
+        """Return the dependencies of this instance."""
+        return ["os", "tensorflow as tf"]
+
+    @property
     def model(self) -> tf.keras.models.Model:
         """Return the Keras model of this instance."""
         return self._model
