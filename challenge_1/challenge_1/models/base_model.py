@@ -12,6 +12,11 @@ class TrainableModel(abc.ABC):
         self._stats: dict[str, Any] = {}
 
     @property
+    def dependencies(self) -> list[str]:
+        """Return the dependencies of this instance."""
+        return ["os", "tensorflow as tf"]
+
+    @property
     def model(self) -> tf.keras.models.Model:
         """Return the model of this instance."""
         raise NotImplementedError

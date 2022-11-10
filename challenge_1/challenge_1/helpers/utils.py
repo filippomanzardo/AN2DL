@@ -13,8 +13,7 @@ from challenge_1.models.base_model import TrainableModel
 _LOGGER = logging.getLogger(__name__)
 
 _METADATA_FILE_CONTENT = "42"
-_MODEL_FILE_CONTENT = """import os
-import tensorflow as tf
+_MODEL_FILE_CONTENT = """
 class Model:
     def __init__(self, path):
         self.model = tf.keras.models.load_model(os.path.join(path, 'SubmissionModel'))
@@ -28,6 +27,7 @@ def prepare_submission(model: TrainableModel, save_path: Path) -> None:
     :param model:  the model to be submitted
     :param save_path: the path where the submission should be saved
     """
+    dependencies = _check_and_compile_dependencies(model.dependencies)
     metadata = _generate_metadata(model.stats)
     out_dir = save_path / (
         f"{model.__class__.__name__}_" + datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -39,7 +39,8 @@ def prepare_submission(model: TrainableModel, save_path: Path) -> None:
         model.save(Path(tmpdir) / "SubmissionModel")
         (Path(tmpdir) / "metadata").write_text(_METADATA_FILE_CONTENT)
         (Path(tmpdir) / "model.py").write_text(
-            _MODEL_FILE_CONTENT
+            dependencies
+            + _MODEL_FILE_CONTENT
             + inspect.getsource(model.predict)
             + "\n"
             + inspect.getsource(model.preprocess)
@@ -58,3 +59,15 @@ def _generate_metadata(stats: dict[str, Any]) -> dict[str, Any]:
         "exported_at": datetime.now().isoformat(),
         **stats,
     }
+
+
+# TODO: Check possible dependencies from assign list
+def _check_and_compile_dependencies(dependencies: list[str]) -> str:
+    """
+    Check if the dependencies are installed.
+
+    :param dependencies: the dependencies to check
+    """
+    assert True
+
+    return "".join(["import " + dep + "\n" for dep in dependencies])

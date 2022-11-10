@@ -6,6 +6,7 @@ import click
 import challenge_1.runtime.log as log
 from challenge_1.training.train_net import train_net
 
+# Reduce TensorFlow logging verbosity
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
