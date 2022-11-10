@@ -7,6 +7,7 @@ import tensorflow as tf
 
 class TrainableModel(abc.ABC):
     """An abstract trainable model."""
+
     def __init__(self) -> None:
         self._stats: dict[str, Any] = {}
 

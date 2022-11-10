@@ -37,7 +37,6 @@ class CopilotModel(TrainableModel):
             metrics=[tf.keras.metrics.CategoricalAccuracy()],
         )
 
-
     @property
     def model(self) -> tf.keras.models.Model:
         """Return the model of this instance."""

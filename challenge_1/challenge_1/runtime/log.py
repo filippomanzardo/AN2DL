@@ -1,40 +1,39 @@
 import logging
 import sys
-import textwrap
 import warnings
-import re
-
+from typing import Any
 
 import colorlog
 
 warnings.filterwarnings("ignore")
 
+
 class StreamToLogger(object):
     """Fake file-like stream object that redirects writes to a logger instance."""
 
-    def __init__(self, logger, log_level=logging.INFO):
+    def __init__(self, logger: logging.Logger, log_level: int) -> None:
         self.logger = logger
         self.log_level = log_level
-        self.linebuf = ''
+        self.linebuf = ""
 
-    def write(self, buf):
+    def write(self, buf: Any) -> None:
         temp_linebuf = self.linebuf + buf
-        self.linebuf = ''
+        self.linebuf = ""
         for line in temp_linebuf.splitlines(True):
             # From the io.TextIOWrapper docs:
             #   On output, if newline is None, any '\n' characters written
             #   are translated to the system default line separator.
             # By default sys.stdout.write() expects '\n' newlines and then
             # translates them so this is still cross platform.
-            if line[-1] == '\n':
+            if line[-1] == "\n":
                 self.logger.log(self.log_level, line.rstrip())
             else:
                 self.linebuf += line
 
-    def flush(self):
-        if self.linebuf != '':
+    def flush(self) -> None:
+        if self.linebuf != "":
             self.logger.log(self.log_level, self.linebuf.rstrip())
-        self.linebuf = ''
+        self.linebuf = ""
 
 
 def _get_color_formatter(entity: str, color: str) -> logging.Formatter:
@@ -68,10 +67,8 @@ def setup(
     root_logger.addHandler(handler)
     root_logger.setLevel(log_level)
 
-    stdout_logger = logging.getLogger('STDOUT')
-    sys.stdout = StreamToLogger(stdout_logger, logging.INFO)
+    # stdout_logger = logging.getLogger("STDOUT")
+    # sys.stdout = StreamToLogger(stdout_logger, logging.INFO)
 
-    tf_logger = logging.getLogger('tensorflow')
+    tf_logger = logging.getLogger("tensorflow")
     tf_logger.setLevel(logging.ERROR)
-
-

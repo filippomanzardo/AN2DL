@@ -13,8 +13,7 @@ from challenge_1.models.base_model import TrainableModel
 _LOGGER = logging.getLogger(__name__)
 
 _METADATA_FILE_CONTENT = "42"
-_MODEL_FILE_CONTENT = """
-import os
+_MODEL_FILE_CONTENT = """import os
 import tensorflow as tf
 class Model:
     def __init__(self, path):
@@ -30,7 +29,9 @@ def prepare_submission(model: TrainableModel, save_path: Path) -> None:
     :param save_path: the path where the submission should be saved
     """
     metadata = _generate_metadata(model.stats)
-    out_dir = save_path / ("submission_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
+    out_dir = save_path / (
+        f"{model.__class__.__name__}_submission_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+    )
     out_dir.mkdir(parents=True, exist_ok=True)
 
     _LOGGER.info("⚙️ Saving model to %s ⚙️", out_dir)
@@ -38,7 +39,10 @@ def prepare_submission(model: TrainableModel, save_path: Path) -> None:
         model.save(Path(tmpdir) / "SubmissionModel")
         (Path(tmpdir) / "metadata").write_text(_METADATA_FILE_CONTENT)
         (Path(tmpdir) / "model.py").write_text(
-            _MODEL_FILE_CONTENT + inspect.getsource(model.predict)
+            _MODEL_FILE_CONTENT
+            + inspect.getsource(model.predict)
+            + "\n"
+            + inspect.getsource(model.preprocess)
         )
 
         shutil.make_archive((out_dir / "submission").as_posix(), "zip", tmpdir)
