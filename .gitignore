@@ -34,3 +34,5 @@
 **/.terraform*
 
 **/submissions
+
+**/failed_models

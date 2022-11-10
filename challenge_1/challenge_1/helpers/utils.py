@@ -14,9 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 _METADATA_FILE_CONTENT = "42"
 _MODEL_FILE_CONTENT = """
-class Model:
+class model:
     def __init__(self, path):
-        self.model = tf.keras.models.load_model(os.path.join(path, 'SubmissionModel'))
+        self._model = tf.keras.models.load_model(os.path.join(path, 'SubmissionModel'))
+    @property
+    def model(self) -> tf.keras.models.Model:
+        return self._model
 """
 
 
@@ -61,7 +64,7 @@ def _generate_metadata(stats: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-# TODO: Check possible dependencies from assign list
+# TODO: Check possible dependencies from assignment list
 def _check_and_compile_dependencies(dependencies: list[str | tuple[str, str]]) -> str:
     """
     Check if the dependencies are installed.

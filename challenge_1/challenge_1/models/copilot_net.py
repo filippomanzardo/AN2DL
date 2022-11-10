@@ -81,10 +81,10 @@ class CopilotModel(TrainableModel):
 
         return history
 
-    def predict(self, X: Any) -> Any:
+    def predict(self, X: Any) -> tf.Tensor:
         """Predict the output for the given input."""
         X = self.preprocess(X)
-        return self._model.predict(X)
+        return tf.argmax(self._model.predict(X), axis=-1)
 
     def preprocess(self, X: Any) -> Any:
         """Preprocess the input."""

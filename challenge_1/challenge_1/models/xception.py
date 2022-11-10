@@ -7,7 +7,7 @@ from challenge_1.models.base_model import TrainableModel
 from challenge_1.runtime.log import restore_stdout
 
 
-class EfficientNetB7(TrainableModel):
+class Xception(TrainableModel):
     """A model that can be trained and used to predict."""
 
     def __init__(self) -> None:
@@ -19,7 +19,8 @@ class EfficientNetB7(TrainableModel):
             include_top=False,
         )  # Do not include the ImageNet classifier at the top.
 
-        base_model.trainable = False
+        for i, layer in enumerate(base_model.layers[:86]):
+            layer.trainable = False
 
         inputs = tf.keras.Input(shape=(96, 96, 3))
         # We make sure that the base_model is running in inference mode here,
@@ -28,14 +29,26 @@ class EfficientNetB7(TrainableModel):
         x = base_model(inputs, training=False)
         # Convert features of shape `base_model.output_shape[1:]` to vectors
         x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        outputs = tf.keras.layers.Dense(8, activation="softmax")(x)
+        x = tf.keras.layers.Dense(
+            1024,
+            kernel_initializer=tf.keras.initializers.GlorotUniform(),
+        )(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.LeakyReLU()(x)
+        x = tf.keras.layers.Dropout(0.2)(x)
+        outputs = tf.keras.layers.Dense(
+            8,
+            activation="softmax",
+            kernel_initializer=tf.keras.initializers.GlorotUniform(),
+        )(x)
+
         # A Dense classifier with a single unit (binary classification)
         self._model = tf.keras.Model(inputs, outputs)
 
         self._model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001),
             loss=tf.keras.losses.CategoricalCrossentropy(),
-            metrics=[tf.keras.metrics.CategoricalAccuracy()],
+            metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
         )
 
     @property
@@ -57,27 +70,15 @@ class EfficientNetB7(TrainableModel):
         verbose: int = 1,
     ) -> tf.keras.callbacks.History:
         training_set = self.preprocess(training_set)
+        validation_set = self.preprocess(validation_set)
 
         history = self._model.fit(
             x=training_set,
             validation_data=validation_set,
             epochs=epochs,
+            batch_size=16,
             verbose=verbose,
         )
-
-        self.stats["train_params"] = history.params
-        self.stats["final_stats"] = {
-            "train_loss": history.history["loss"][-1],
-            "train_accuracy": history.history["categorical_accuracy"][-1],
-            "val_loss": history.history["val_loss"][-1],
-            "val_accuracy": history.history["val_categorical_accuracy"][-1],
-        }
-        self.stats["train_history"] = history.history
-
-        if test_set:
-            loss, accuracy = self._model.evaluate(test_set)
-            self.stats["loss"] = loss
-            self.stats["accuracy"] = accuracy
 
         return history
 

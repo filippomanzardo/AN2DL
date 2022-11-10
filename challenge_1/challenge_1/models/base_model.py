@@ -55,7 +55,7 @@ class TrainableModel(abc.ABC):
         """
 
     @abc.abstractmethod
-    def preprocess(self, X: Any) -> Any:
+    def preprocess(self, X: Any) -> tf.Tensor:
         """
         Preprocess the input.
 
