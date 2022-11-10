@@ -35,6 +35,11 @@ def train_net(net_name: str, epochs: int) -> None:
     model = NET_TO_MODEL[net_name]()
 
     _LOGGER.info("🏃‍♂️ Training model 🏃‍♂️")
-    model.train(training_dataset, validation_dataset, epochs=epochs, verbose=1)
+
+    try:
+        model.train(training_dataset, validation_dataset, epochs=epochs, verbose=1)
+    except KeyboardInterrupt:
+        _LOGGER.info("🛑 Training interrupted 🛑")
+        return
 
     prepare_submission(model, Path("submissions"))
