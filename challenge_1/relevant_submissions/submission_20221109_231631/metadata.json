@@ -1,0 +1,29 @@
+{
+    "id": "12476398",
+    "exported_at": "2022-11-09T23:16:31.846365",
+    "train_params": {
+        "verbose": 0,
+        "epochs": 1,
+        "steps": 84
+    },
+    "final_stats": {
+        "train_loss": 1.9431010484695435,
+        "train_accuracy": 0.24060150980949402,
+        "val_loss": 1.7888855934143066,
+        "val_accuracy": 0.30612245202064514
+    },
+    "train_history": {
+        "loss": [
+            1.9431010484695435
+        ],
+        "categorical_accuracy": [
+            0.24060150980949402
+        ],
+        "val_loss": [
+            1.7888855934143066
+        ],
+        "val_categorical_accuracy": [
+            0.30612245202064514
+        ]
+    }
+}
