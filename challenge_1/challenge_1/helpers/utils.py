@@ -62,7 +62,7 @@ def _generate_metadata(stats: dict[str, Any]) -> dict[str, Any]:
 
 
 # TODO: Check possible dependencies from assign list
-def _check_and_compile_dependencies(dependencies: list[str]) -> str:
+def _check_and_compile_dependencies(dependencies: list[str | tuple[str, str]]) -> str:
     """
     Check if the dependencies are installed.
 
@@ -70,4 +70,11 @@ def _check_and_compile_dependencies(dependencies: list[str]) -> str:
     """
     assert True
 
-    return "".join(["import " + dep + "\n" for dep in dependencies])
+    return "".join(
+        [
+            "import " + dep + "\n"
+            if isinstance(dep, str)
+            else "from " + dep[0] + " import " + dep[1] + "\n"
+            for dep in dependencies
+        ]
+    )

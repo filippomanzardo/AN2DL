@@ -12,9 +12,9 @@ class TrainableModel(abc.ABC):
         self._stats: dict[str, Any] = {}
 
     @property
-    def dependencies(self) -> list[str]:
+    def dependencies(self) -> list[str | tuple[str, str]]:
         """Return the dependencies of this instance."""
-        return ["os", "tensorflow as tf"]
+        return ["os", "tensorflow as tf", ("typing", "Any")]
 
     @property
     def model(self) -> tf.keras.models.Model:

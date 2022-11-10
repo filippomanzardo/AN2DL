@@ -3,7 +3,7 @@ exclude =
     .venv
     node_modules
     dataset
-    *submisssions
+    submissions
 
 max-line-length = 100
 
