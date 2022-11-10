@@ -39,7 +39,7 @@ def train_net(net_name: str, epochs: int) -> None:
     try:
         model.train(training_dataset, validation_dataset, epochs=epochs, verbose=1)
     except KeyboardInterrupt:
-        _LOGGER.info("🛑 Training interrupted 🛑")
+        _LOGGER.warning("🛑 Training interrupted 🛑")
         return
 
     prepare_submission(model, Path("submissions"))
