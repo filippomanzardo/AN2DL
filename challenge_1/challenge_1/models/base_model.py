@@ -71,3 +71,8 @@ class TrainableModel(abc.ABC):
         :param X: The input.
         :return: The output.
         """
+
+    def set_stats(self, history: tf.keras.callbacks.History) -> None:
+        """Set the stats of the model."""
+        self.stats["train_params"] = history.params
+        self.stats["train_history"] = history.history

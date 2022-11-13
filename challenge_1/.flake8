@@ -1,9 +1,8 @@
 [flake8]
 exclude =
-    .venv
-    node_modules
-    dataset
-    submissions
+    .venv |
+    dataset |
+    submissions |
 
 max-line-length = 100
 

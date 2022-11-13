@@ -14,20 +14,15 @@ class Xception(TrainableModel):
         super().__init__()
 
         base_model = tf.keras.applications.EfficientNetB7(
-            weights="imagenet",  # Load weights pre-trained on ImageNet.
+            weights="imagenet",
             input_shape=(96, 96, 3),
             include_top=False,
-        )  # Do not include the ImageNet classifier at the top.
-
+        )
         for i, layer in enumerate(base_model.layers[:86]):
             layer.trainable = False
 
         inputs = tf.keras.Input(shape=(96, 96, 3))
-        # We make sure that the base_model is running in inference mode here,
-        # by passing `training=False`. This is important for fine-tuning, as you will
-        # learn in a few paragraphs.
         x = base_model(inputs, training=False)
-        # Convert features of shape `base_model.output_shape[1:]` to vectors
         x = tf.keras.layers.GlobalAveragePooling2D()(x)
         x = tf.keras.layers.Dense(
             1024,
@@ -42,7 +37,6 @@ class Xception(TrainableModel):
             kernel_initializer=tf.keras.initializers.GlorotUniform(),
         )(x)
 
-        # A Dense classifier with a single unit (binary classification)
         self._model = tf.keras.Model(inputs, outputs)
 
         self._model.compile(
@@ -79,6 +73,8 @@ class Xception(TrainableModel):
             batch_size=16,
             verbose=verbose,
         )
+
+        self.set_stats(history)
 
         return history
 

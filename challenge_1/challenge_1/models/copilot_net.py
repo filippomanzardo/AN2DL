@@ -13,7 +13,23 @@ class CopilotModel(TrainableModel):
     def __init__(self) -> None:
         super().__init__()
 
-        self._model = tf.keras.models.Sequential(
+        self._model = self.get_model()
+
+        self._model.compile(
+            optimizer=tf.keras.optimizers.Adam(),
+            loss=tf.keras.losses.CategoricalCrossentropy(),
+            metrics=[tf.keras.metrics.CategoricalAccuracy()],
+        )
+
+    @property
+    def model(self) -> tf.keras.models.Model:
+        """Return the model of this instance."""
+        return self._model
+
+    @staticmethod
+    def get_model() -> tf.keras.models.Model:
+        """Return the model of this instance."""
+        return tf.keras.models.Sequential(
             [
                 tf.keras.layers.Conv2D(
                     filters=32,
@@ -31,17 +47,6 @@ class CopilotModel(TrainableModel):
                 tf.keras.layers.Dense(units=8, activation="softmax"),
             ]
         )
-
-        self._model.compile(
-            optimizer=tf.keras.optimizers.Adam(),
-            loss=tf.keras.losses.CategoricalCrossentropy(),
-            metrics=[tf.keras.metrics.CategoricalAccuracy()],
-        )
-
-    @property
-    def model(self) -> tf.keras.models.Model:
-        """Return the model of this instance."""
-        return self._model
 
     def save(self, path: Path) -> None:
         """Save the model to the given path."""
@@ -65,14 +70,7 @@ class CopilotModel(TrainableModel):
             verbose=verbose,
         )
 
-        self.stats["train_params"] = history.params
-        self.stats["final_stats"] = {
-            "train_loss": history.history["loss"][-1],
-            "train_accuracy": history.history["categorical_accuracy"][-1],
-            "val_loss": history.history["val_loss"][-1],
-            "val_accuracy": history.history["val_categorical_accuracy"][-1],
-        }
-        self.stats["train_history"] = history.history
+        self.set_stats(history)
 
         if test_set:
             loss, accuracy = self._model.evaluate(test_set)

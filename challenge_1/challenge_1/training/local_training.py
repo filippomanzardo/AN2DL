@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 
 import tensorflow as tf
-from sklearn.utils import resample
 
 from challenge_1.helpers.utils import prepare_submission
 from challenge_1.models import NET_TO_MODEL
@@ -54,9 +53,8 @@ def train_net(net_name: str, epochs: int) -> None:
         model.train(training_dataset, validation_dataset, epochs=epochs, verbose=1)
     except KeyboardInterrupt:
         _LOGGER.warning("🛑 Training interrupted 🛑")
-        input("❓ Do you want to save the model? [y/N] ❓") == "y" and prepare_submission(
-            model, Path("submissions")
-        )
+        if input("❓ Do you want to save the model? [y/N] ❓\t") == "y":
+            prepare_submission(model, Path("submissions"))
         return
     except Exception:
         _LOGGER.exception("❌ Training failed ❌")

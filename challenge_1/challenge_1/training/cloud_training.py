@@ -1,28 +1,30 @@
 import inspect
+import logging
 import shutil
 import tempfile
 from pathlib import Path
-import logging
+
 import tensorflow as tf
-# import tensorflow_cloud as tfc
+import tensorflow_cloud as tfc
 from google.cloud import storage
 
 from challenge_1.models import NET_TO_MODEL
 
 _LOGGER = logging.getLogger(__name__)
 _DATASET_DIRECTORY = Path(".") / "dataset"
+_CLOUD_DIR = Path("./challenge_1/cloud_entrypoint/")
 
 GCP_BUCKET = "polimi-training"
 
 
 def train_on_gcp(net_name: str, epochs: int) -> None:
-    model = NET_TO_MODEL[net_name]()
+    model = NET_TO_MODEL[net_name]()  # type: ignore[abstract]
 
     _LOGGER.info("☁️ Training model on GCP ☁️")
 
-    _load_dataset_if_not_exists()
+    _upload_dataset_if_not_exists()
 
-    entry_point = _prepare_entrypoint(model)
+    entry_point = _prepare_entrypoint(model, epochs)
 
     tfc.run(
         entry_point=str(entry_point),
@@ -32,11 +34,13 @@ def train_on_gcp(net_name: str, epochs: int) -> None:
     )
 
 
-def _load_dataset_if_not_exists() -> None:
+def _upload_dataset_if_not_exists() -> None:
     client = storage.Client()
     bucket = client.get_bucket(GCP_BUCKET)
     if not bucket.blob("challenge_1/dataset.zip").exists():
+
         _LOGGER.info("📂 Uploading dataset to GCS 📂")
+
         with tempfile.TemporaryDirectory() as tmp_dir:
             dataset_path = Path(tmp_dir) / "dataset"
             shutil.make_archive(dataset_path.as_posix(), "zip", _DATASET_DIRECTORY)
@@ -47,20 +51,17 @@ def _load_dataset_if_not_exists() -> None:
         _LOGGER.info("🚀 Dataset already uploaded 🚀")
 
 
-_CLOUD_DIR = Path("./challenge_1/cloud_entrypoint/")
-
-
-def _prepare_entrypoint(model: tf.keras.Model) -> Path:
+def _prepare_entrypoint(model: tf.keras.Model, epochs: int) -> Path:
     _LOGGER.info("📝 Preparing entrypoint 📝")
-    entrypoint_path = _CLOUD_DIR / "entrypoint.py"
-    with open(_CLOUD_DIR / "template", "r") as template_file:
-        template = template_file.read()
-    with open(entrypoint_path, "w") as entrypoint_file:
-        entrypoint_file.write(
-            template.replace(
-                "__MODEL_FUNCTION_HERE__",
-                inspect.getsource(model.get_model).replace("@staticmethod\n", "").lstrip(),
-            )
-        )
+    entrypoint_file = _CLOUD_DIR / "entrypoint.py"
 
-    return entrypoint_path
+    template = (_CLOUD_DIR / "template").read_text()
+    entrypoint_file.write_text(
+        template.replace("@staticmethod\n", "")
+        .replace("__MODEL_FUNCTION_HERE__", inspect.getsource(model.get_model))
+        .replace("__EPOCHS__", str(epochs))
+        .lstrip(),
+    )
+
+    _LOGGER.info("👌🏻 Entrypoint ready! 👌🏻")
+    return entrypoint_file
