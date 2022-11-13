@@ -1,31 +1,11 @@
-from pathlib import Path
 from typing import Any
 
 import tensorflow as tf
 
 from challenge_1.models.base_model import TrainableModel
-from challenge_1.runtime.log import restore_stdout
 
 
 class ConvNext(TrainableModel):
-    def __init__(self) -> None:
-        super().__init__()
-
-        self._model = self.get_model()
-
-        self._model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
-            loss=tf.keras.losses.CategoricalCrossentropy(),
-            metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
-        )
-
-    @property
-    def model(self) -> tf.keras.models.Model:
-        return self._model
-
-    def save(self, path: Path) -> None:
-        self._model.save(path)
-
     @staticmethod
     def get_model() -> tf.keras.models.Model:
         base_model = tf.keras.applications.convnext.ConvNeXtTiny(
@@ -63,37 +43,6 @@ class ConvNext(TrainableModel):
         )(x)
 
         return tf.keras.Model(inputs, outputs)
-
-    @restore_stdout
-    def train(
-        self,
-        training_set: Any,
-        validation_set: Any,
-        test_set: Any | None = None,
-        epochs: int = 10,
-        verbose: int = 1,
-        callbacks: list[tf.keras.callbacks.Callback] | None = None,
-    ) -> tf.keras.callbacks.History:
-        training_set = self.preprocess(training_set)
-        validation_set = self.preprocess(validation_set)
-
-        history = self._model.fit(
-            x=training_set,
-            validation_data=validation_set,
-            epochs=epochs,
-            batch_size=16,
-            verbose=verbose,
-            callbacks=callbacks,
-        )
-
-        self.set_stats(history)
-
-        return history
-
-    def predict(self, X: Any) -> tf.Tensor:
-        """Predict the output for the given input."""
-        X = self.preprocess(X)
-        return tf.argmax(self._model.predict(X), axis=-1)
 
     def preprocess(self, X: Any) -> Any:
         """Preprocess the input."""

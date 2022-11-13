@@ -1,15 +1,24 @@
-import abc
 from pathlib import Path
 from typing import Any
 
 import tensorflow as tf
 
+from challenge_1.runtime.log import restore_stdout
 
-class TrainableModel(abc.ABC):
+
+class TrainableModel:
     """An abstract trainable model."""
 
-    def __init__(self) -> None:
+    def __init__(self, optimizer: tf.keras.optimizers.Optimizer) -> None:
         self._stats: dict[str, Any] = {}
+        self._optimizer = optimizer
+        self._model = self.get_model()
+
+        self._model.compile(
+            optimizer=self._optimizer,
+            loss=tf.keras.losses.CategoricalCrossentropy(),
+            metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
+        )
 
     @property
     def dependencies(self) -> list[str | tuple[str, str]]:
@@ -19,22 +28,27 @@ class TrainableModel(abc.ABC):
     @property
     def model(self) -> tf.keras.models.Model:
         """Return the model of this instance."""
-        raise NotImplementedError
+        raise self._model
 
     @property
     def stats(self) -> dict[str, Any]:
         """Return the stats of the model."""
         return self._stats
 
-    @abc.abstractmethod
+    @staticmethod
+    def get_model() -> tf.keras.models.Model:
+        """Return the model of this instance."""
+        raise NotImplementedError
+
     def save(self, path: Path) -> None:
         """
         Save the model to the given path.
 
         :param path: The path to save the model to.
         """
+        self._model.save(path)
 
-    @abc.abstractmethod
+    @restore_stdout
     def train(
         self,
         training_set: Any,
@@ -55,8 +69,27 @@ class TrainableModel(abc.ABC):
         :param callbacks: The callbacks to use.
         :return: The training history.
         """
+        training_set = self.preprocess(training_set)
+        validation_set = self.preprocess(validation_set)
 
-    @abc.abstractmethod
+        history = self._model.fit(
+            x=training_set,
+            validation_data=validation_set,
+            epochs=epochs,
+            batch_size=16,
+            verbose=verbose,
+            callbacks=callbacks,
+        )
+
+        self.set_stats(history)
+
+        if test_set:
+            loss, accuracy = self._model.evaluate(test_set)
+            self.stats["test_loss"] = loss
+            self.stats["test_accuracy"] = accuracy
+
+        return history
+
     def preprocess(self, X: Any) -> tf.Tensor:
         """
         Preprocess the input.
@@ -64,17 +97,48 @@ class TrainableModel(abc.ABC):
         :param X: The input.
         :return: The preprocessed input.
         """
+        X = self.preprocess(X)
+        return tf.argmax(self._model.predict(X), axis=-1)
 
-    @abc.abstractmethod
-    def predict(self, X: Any) -> Any:
-        """
-        Predict the output for the given input.
-
-        :param X: The input.
-        :return: The output.
-        """
+    def predict(self, X: Any) -> tf.Tensor:
+        """Predict the output for the given input."""
+        X = self.preprocess(X)
+        return tf.argmax(self._model.predict(X), axis=-1)
 
     def set_stats(self, history: tf.keras.callbacks.History) -> None:
         """Set the stats of the model."""
         self.stats["train_params"] = history.params
         self.stats["train_history"] = history.history
+
+    def fine_tune(
+        self,
+        training_set: Any,
+        validation_set: Any,
+        test_set: Any | None = None,
+        epochs: int = 10,
+        verbose: int = 1,
+        callbacks: list[tf.keras.callbacks.Callback] | None = None,
+    ) -> tf.keras.callbacks.History:
+        """Fine tune the model."""
+        self._model.trainable = True
+        # Fine-tune these last layers
+        fine_tune_from = -50 if len(self._model.layers) > 100 else -10
+
+        # Freeze all the layers before the `fine_tune_from` layer
+        for layer in self._model.layers[:fine_tune_from]:
+            layer.trainable = False
+
+        self._model.compile(
+            optimizer=self._optimizer,
+            loss=tf.keras.losses.CategoricalCrossentropy(),
+            metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
+        )
+
+        return self.train(
+            training_set=training_set,
+            validation_set=validation_set,
+            test_set=test_set,
+            epochs=epochs,
+            verbose=verbose,
+            callbacks=callbacks,
+        )
