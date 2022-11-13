@@ -10,7 +10,7 @@ import tensorflow_cloud as tfc
 __MODEL_FUNCTION_HERE__
 
 GCP_BUCKET = "polimi-training"
-CHECKPOINT_PATH = os.path.join("gs://", GCP_BUCKET, "challenge_1", "save_at_{epoch}")
+CHECKPOINT_PATH = os.path.join("gs://", GCP_BUCKET, "challenge_1", "save_at_{epoch}_", datetime.now().strftime("%Y%m%d-%H%M%S"))
 TENSORBOARD_PATH = os.path.join(
     "gs://", GCP_BUCKET, "logs", datetime.now().strftime("%Y%m%d-%H%M%S")
 )
@@ -70,3 +70,26 @@ save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime
 
 if tfc.remote():
     model.save(save_path)
+
+if __FINE_TUNING__:
+    model.trainable = False
+    fine_tune_from = -50 if len(model.layers) > 100 else -25
+
+    for layer in model.layers[fine_tune_from:]:
+        if not isinstance(layer, tf.keras.layers.BatchNormalization):
+            layer.trainable = True
+
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        loss=tf.keras.losses.CategoricalCrossentropy(),
+        metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
+    )
+
+    model.fit(training_dataset, epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+
+    save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned")
+
+    if tfc.remote():
+        model.save(save_path)
+
+

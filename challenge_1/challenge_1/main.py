@@ -13,6 +13,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 @click.command()
 @click.option("--net-name", default="copilotnet", help="The neural network to train")
+@click.option("--fine-tune", is_flag=True, default=False, help="The number of epochs to train for")
 @click.option("--epochs", default=10, help="The number of epochs to train for")
 @click.option(
     "--cloud-run",
@@ -20,15 +21,14 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
     help="Sets this flag to run the trainig in the cloud",
     default=False,
 )
-def run_training(net_name: str, epochs: int, cloud_run: bool) -> None:
+def run_training(net_name: str, epochs: int, cloud_run: bool, fine_tune: bool) -> None:
     """Run the training."""
     log.setup(log_level=logging.DEBUG)
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
     if cloud_run:
-        train_on_gcp(net_name, epochs)
+        train_on_gcp(net_name=net_name, epochs=epochs, fine_tune=fine_tune)
     else:
-        train_net(net_name=net_name, epochs=epochs)
+        train_net(net_name=net_name, epochs=epochs, fine_tune=fine_tune)
 
 
 if __name__ == "__main__":

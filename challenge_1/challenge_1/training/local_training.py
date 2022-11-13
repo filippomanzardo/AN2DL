@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Any, Callable
 
 import tensorflow as tf
 
@@ -11,7 +12,14 @@ _LOGGER = logging.getLogger(__name__)
 _DATASET_DIRECTORY = Path(".") / "dataset"
 
 
-def train_net(net_name: str, epochs: int) -> None:
+def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
+    """
+    Train the given net.
+
+    :param net_name: The name of the net to train.
+    :param epochs: The number of epochs to train for.
+    :param fine_tune: Whether to fine-tune the model.
+    """
     generator = tf.keras.preprocessing.image.ImageDataGenerator(
         rotation_range=20,
         height_shift_range=0.3,
@@ -46,12 +54,39 @@ def train_net(net_name: str, epochs: int) -> None:
         else None
     )
 
-    model_class = NET_TO_MODEL[net_name]()  # type: ignore[abstract]
-    save_callback = SaveBestModelInMemory(metric="val_loss" if validation_dataset else "loss")
+    model_class = NET_TO_MODEL[net_name](optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
     _LOGGER.info("🏃‍♂️ Training model 🏃‍♂️")
 
+    _train_and_publish(
+        model_class.train,
+        model_class=model_class,
+        training_dataset=training_dataset,
+        validation_dataset=validation_dataset,
+        epochs=epochs,
+    )
+
+    if fine_tune:
+        _train_and_publish(
+            model_class.fine_tune,
+            model_class=model_class,
+            training_dataset=training_dataset,
+            validation_dataset=validation_dataset,
+            epochs=epochs,
+        )
+
+
+def _train_and_publish(
+    train: Callable[..., Any],
+    model_class: tf.keras.Model,
+    epochs: int,
+    training_dataset: Any,
+    validation_dataset: Any,
+) -> None:
+
+    save_callback = SaveBestModelInMemory(metric="val_loss" if validation_dataset else "loss")
+
     try:
-        model_class.train(
+        train(
             training_dataset,
             validation_dataset,
             epochs=epochs,

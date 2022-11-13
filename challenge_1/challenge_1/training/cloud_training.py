@@ -16,16 +16,16 @@ _CLOUD_DIR = Path("./challenge_1/cloud_entrypoint/")
 GCP_BUCKET = "polimi-training"
 
 
-def train_on_gcp(net_name: str, epochs: int) -> None:
+def train_on_gcp(net_name: str, epochs: int, fine_tune: bool) -> None:
     import tensorflow_cloud as tfc  # Local import to avoid double logging
 
-    model = NET_TO_MODEL[net_name]()  # type: ignore[abstract]
+    model = NET_TO_MODEL[net_name](optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
 
     _LOGGER.info("☁️ Training model on GCP ☁️")
 
     _upload_dataset_if_not_exists()
 
-    entry_point = _prepare_entrypoint(model, epochs)
+    entry_point = _prepare_entrypoint(model, epochs, fine_tune)
 
     tfc.run(
         entry_point=str(entry_point),
@@ -52,7 +52,7 @@ def _upload_dataset_if_not_exists() -> None:
         _LOGGER.info("🚀 Dataset already uploaded 🚀")
 
 
-def _prepare_entrypoint(model: tf.keras.Model, epochs: int) -> Path:
+def _prepare_entrypoint(model: tf.keras.Model, epochs: int, fine_tune: bool) -> Path:
     _LOGGER.info("📝 Preparing entrypoint 📝")
     entrypoint_file = _CLOUD_DIR / "entrypoint.py"
 
@@ -63,7 +63,7 @@ def _prepare_entrypoint(model: tf.keras.Model, epochs: int) -> Path:
             inspect.getsource(model.get_model).replace("@staticmethod", "").lstrip(),
         )
         .replace("__EPOCHS__", str(epochs))
-        .lstrip(),
+        .replace("__FINE_TUNING__", str(fine_tune))
     )
 
     _LOGGER.info("👌🏻 Entrypoint ready! 👌🏻")

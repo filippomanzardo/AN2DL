@@ -13,6 +13,7 @@ class TrainableModel:
         self._stats: dict[str, Any] = {}
         self._optimizer = optimizer
         self._model = self.get_model()
+        self._fine_tuned = False
 
         self._model.compile(
             optimizer=self._optimizer,
@@ -34,6 +35,11 @@ class TrainableModel:
     def stats(self) -> dict[str, Any]:
         """Return the stats of the model."""
         return self._stats
+
+    @property
+    def fine_tuned(self) -> bool:
+        """Return whether the model has been fine tuned."""
+        return self._fine_tuned
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:
@@ -120,13 +126,15 @@ class TrainableModel:
         callbacks: list[tf.keras.callbacks.Callback] | None = None,
     ) -> tf.keras.callbacks.History:
         """Fine tune the model."""
-        self._model.trainable = True
+        self._fine_tuned = True
+        self._model.trainable = False
         # Fine-tune these last layers
         fine_tune_from = -50 if len(self._model.layers) > 100 else -10
 
         # Freeze all the layers before the `fine_tune_from` layer
         for layer in self._model.layers[:fine_tune_from]:
-            layer.trainable = False
+            if not isinstance(layer, tf.keras.layers.BatchNormalization):
+                layer.trainable = True
 
         self._model.compile(
             optimizer=self._optimizer,

@@ -33,7 +33,9 @@ def prepare_submission(model: TrainableModel, save_path: Path) -> None:
     dependencies = _check_and_compile_dependencies(model.dependencies)
     metadata = _generate_metadata(model.stats)
     out_dir = save_path / (
-        f"{model.__class__.__name__}_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+        f"{model.__class__.__name__}_"
+        + datetime.now().strftime("%Y%m%d_%H%M%S")
+        + ("_fine_tuned" if model.fine_tuned else "_base")
     )
     out_dir.mkdir(parents=True, exist_ok=True)
 
