@@ -58,7 +58,7 @@ model.compile(
 )
 
 if tfc.remote():
-    epochs = __epochs__
+    epochs = __EPOCHS__
     batch_size = 16
 else:
     epochs = 10

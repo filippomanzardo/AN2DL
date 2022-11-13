@@ -20,12 +20,12 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
     help="Sets this flag to run the trainig in the cloud",
     default=False,
 )
-def run_training(net_name: str, epochs: int, gcp: bool) -> None:
+def run_training(net_name: str, epochs: int, cloud_run: bool) -> None:
     """Run the training."""
     log.setup(log_level=logging.DEBUG)
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
-    if gcp:
+    if cloud_run:
         train_on_gcp(net_name, epochs)
     else:
         train_net(net_name=net_name, epochs=epochs)

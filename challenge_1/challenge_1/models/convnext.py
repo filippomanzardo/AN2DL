@@ -14,7 +14,7 @@ class ConvNext(TrainableModel):
         self._model = self.get_model()
 
         self._model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
             loss=tf.keras.losses.CategoricalCrossentropy(),
             metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
         )
@@ -28,7 +28,7 @@ class ConvNext(TrainableModel):
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:
-        base_model = tf.keras.applications.convnext.ConvNeXtBase(
+        base_model = tf.keras.applications.convnext.ConvNeXtTiny(
             weights="imagenet",  # Load weights pre-trained on ImageNet.
             input_shape=(96, 96, 3),
             include_top=False,

@@ -5,7 +5,6 @@ import tempfile
 from pathlib import Path
 
 import tensorflow as tf
-import tensorflow_cloud as tfc
 from google.cloud import storage
 
 from challenge_1.models import NET_TO_MODEL
@@ -18,6 +17,8 @@ GCP_BUCKET = "polimi-training"
 
 
 def train_on_gcp(net_name: str, epochs: int) -> None:
+    import tensorflow_cloud as tfc  # Local import to avoid double logging
+
     model = NET_TO_MODEL[net_name]()  # type: ignore[abstract]
 
     _LOGGER.info("☁️ Training model on GCP ☁️")
@@ -57,8 +58,10 @@ def _prepare_entrypoint(model: tf.keras.Model, epochs: int) -> Path:
 
     template = (_CLOUD_DIR / "template").read_text()
     entrypoint_file.write_text(
-        template.replace("@staticmethod\n", "")
-        .replace("__MODEL_FUNCTION_HERE__", inspect.getsource(model.get_model))
+        template.replace(
+            "__MODEL_FUNCTION_HERE__",
+            inspect.getsource(model.get_model).replace("@staticmethod", "").lstrip(),
+        )
         .replace("__EPOCHS__", str(epochs))
         .lstrip(),
     )

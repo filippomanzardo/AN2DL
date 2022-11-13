@@ -1,3 +1,4 @@
+# We use __<something>__ to put placeholders that will be replaced
 import os
 import tempfile
 import zipfile
@@ -9,8 +10,7 @@ from google.cloud import storage
 
 
 def get_model() -> tf.keras.models.Model:
-    """Return the model definition."""
-    base_model = tf.keras.applications.convnext.ConvNeXtBase(
+    base_model = tf.keras.applications.convnext.ConvNeXtTiny(
         weights="imagenet",  # Load weights pre-trained on ImageNet.
         input_shape=(96, 96, 3),
         include_top=False,
@@ -99,8 +99,8 @@ if tfc.remote():
     epochs = 50
     batch_size = 16
 else:
-    epochs = 1
-    batch_size = 16
+    epochs = 10
+    batch_size = 128
 
 model.fit(training_dataset, epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
 
