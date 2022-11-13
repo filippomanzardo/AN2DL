@@ -39,6 +39,14 @@ GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 \
 poetry install
 ```
 
+and be sure that the command `xcode-select -p` returns `/Library/Developer/CommandLineTools`, 
+otherwise run the following command:
+
+```bash
+sudo xcode-select -s /Library/Developer/CommandLineTools
+```
+
+
 ## Usage
 
 To run the code, you can use the following command:

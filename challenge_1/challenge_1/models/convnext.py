@@ -8,7 +8,7 @@ from challenge_1.models.base_model import TrainableModel
 class ConvNext(TrainableModel):
     @staticmethod
     def get_model() -> tf.keras.models.Model:
-        base_model = tf.keras.applications.convnext.ConvNeXtTiny(
+        base_model = tf.keras.applications.convnext.ConvNeXtBase(
             weights="imagenet",
             input_shape=(96, 96, 3),
             include_top=False,

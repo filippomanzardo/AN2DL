@@ -5,12 +5,12 @@ import tensorflow as tf
 from challenge_1.models.base_model import TrainableModel
 
 
-class EfficientNetB7(TrainableModel):
+class EfficientNet(TrainableModel):
     """A model that can be trained and used to predict."""
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:
-        base_model = tf.keras.applications.EfficientNetB7(
+        base_model = tf.keras.applications.EfficientNetV2B3(
             weights="imagenet",
             input_shape=(96, 96, 3),
             include_top=False,
@@ -20,8 +20,27 @@ class EfficientNetB7(TrainableModel):
 
         inputs = tf.keras.Input(shape=(96, 96, 3))
         x = base_model(inputs, training=False)
+
         x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        outputs = tf.keras.layers.Dense(8, activation="softmax")(x)
+        x = tf.keras.layers.Dense(
+            512,
+            kernel_initializer=tf.keras.initializers.GlorotUniform(),
+        )(x)
+        x = tf.keras.layers.LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Dropout(0.2)(x)
+        x = tf.keras.layers.Dense(
+            128,
+            kernel_initializer=tf.keras.initializers.GlorotUniform(),
+        )(x)
+        x = tf.keras.layers.LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Dropout(0.2)(x)
+        outputs = tf.keras.layers.Dense(
+            8,
+            activation="softmax",
+            kernel_initializer=tf.keras.initializers.GlorotUniform(),
+        )(x)
 
         return tf.keras.Model(inputs, outputs)
 

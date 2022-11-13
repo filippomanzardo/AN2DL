@@ -24,6 +24,7 @@ scikit-image = "^0.18.3"
 scikit-learn = "^1.0.2"
 seaborn = "^0.11.2"
 tqdm = "^4.64.1"
+tensorflow-metal = "^0.6.0"
 
 
 [tool.poetry.group.dev.dependencies]
