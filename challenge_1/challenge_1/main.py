@@ -14,7 +14,12 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 @click.command()
 @click.option("--net-name", default="copilotnet", help="The neural network to train")
 @click.option("--epochs", default=10, help="The number of epochs to train for")
-@click.option("--gcp", is_flag=True, help="Train on GCP", default=False)
+@click.option(
+    "--cloud-run",
+    is_flag=True,
+    help="Sets this flag to run the trainig in the cloud",
+    default=False,
+)
 def run_training(net_name: str, epochs: int, gcp: bool) -> None:
     """Run the training."""
     log.setup(log_level=logging.DEBUG)
