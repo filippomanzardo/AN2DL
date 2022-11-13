@@ -10,6 +10,11 @@ class TrainableModel:
     """An abstract trainable model."""
 
     def __init__(self, optimizer: tf.keras.optimizers.Optimizer) -> None:
+        """
+        Initialize the model.
+
+        :param optimizer: The optimizer to use.
+        """
         self._stats: dict[str, Any] = {}
         self._optimizer = optimizer
         self._model = self.get_model()
@@ -29,7 +34,7 @@ class TrainableModel:
     @property
     def model(self) -> tf.keras.models.Model:
         """Return the model of this instance."""
-        raise self._model
+        return self._model
 
     @property
     def stats(self) -> dict[str, Any]:

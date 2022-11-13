@@ -40,7 +40,7 @@ class StreamToLogger(object):
 def _get_color_formatter(color: str) -> logging.Formatter:
     """Cool colored formatter for log messages."""
     return colorlog.ColoredFormatter(
-        fmt=f"[%(asctime)4s]%(fg_thin_{color})s[%(name).8s]]%(reset)s "
+        fmt=f"%(fg_thin_{color})s[%(asctime)4s]%(reset)s "
         f"%(log_color)s%(levelname)8s |%(reset)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         log_colors={

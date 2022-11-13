@@ -9,13 +9,11 @@ class ConvNext(TrainableModel):
     @staticmethod
     def get_model() -> tf.keras.models.Model:
         base_model = tf.keras.applications.convnext.ConvNeXtTiny(
-            weights="imagenet",  # Load weights pre-trained on ImageNet.
+            weights="imagenet",
             input_shape=(96, 96, 3),
             include_top=False,
-        )  # Do not include the ImageNet classifier at the top.
-
-        for i, layer in enumerate(base_model.layers[:-10]):
-            layer.trainable = False
+        )
+        base_model.trainable = False
 
         inputs = tf.keras.Input(shape=(96, 96, 3))
 

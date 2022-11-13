@@ -11,13 +11,12 @@ class Xception(TrainableModel):
     @staticmethod
     def get_model() -> tf.keras.models.Model:
 
-        base_model = tf.keras.applications.EfficientNetB7(
+        base_model = tf.keras.applications.Xception(
             weights="imagenet",
             input_shape=(96, 96, 3),
             include_top=False,
         )
-        for i, layer in enumerate(base_model.layers[:86]):
-            layer.trainable = False
+        base_model.trainable = False
 
         inputs = tf.keras.Input(shape=(96, 96, 3))
         x = base_model(inputs, training=False)
@@ -40,4 +39,4 @@ class Xception(TrainableModel):
     def preprocess(self, X: Any) -> Any:
         """Preprocess the input."""
 
-        return tf.keras.applications.efficientnet.preprocess_input(X)
+        return tf.keras.applications.xception.preprocess_input(X)

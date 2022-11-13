@@ -17,6 +17,13 @@ GCP_BUCKET = "polimi-training"
 
 
 def train_on_gcp(net_name: str, epochs: int, fine_tune: bool) -> None:
+    """
+    Train the given net on GCP.
+
+    :param net_name: The name of the net to train.
+    :param epochs: The number of epochs to train for.
+    :param fine_tune: Whether to fine-tune the model.
+    """
     import tensorflow_cloud as tfc  # Local import to avoid double logging
 
     model = NET_TO_MODEL[net_name](optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
@@ -27,6 +34,7 @@ def train_on_gcp(net_name: str, epochs: int, fine_tune: bool) -> None:
 
     entry_point = _prepare_entrypoint(model, epochs, fine_tune)
 
+    _LOGGER.info("🚀 Training model 🚀")
     tfc.run(
         entry_point=str(entry_point),
         distribution_strategy="auto",
@@ -36,6 +44,7 @@ def train_on_gcp(net_name: str, epochs: int, fine_tune: bool) -> None:
 
 
 def _upload_dataset_if_not_exists() -> None:
+    """Upload the dataset to GC Storage Bucket if it doesn't exist."""
     client = storage.Client()
     bucket = client.get_bucket(GCP_BUCKET)
     if not bucket.blob("challenge_1/dataset.zip").exists():
@@ -48,11 +57,13 @@ def _upload_dataset_if_not_exists() -> None:
             blob = bucket.blob("challenge_1/dataset.zip")
             blob.upload_from_filename(dataset_path.as_posix() + ".zip")
 
+        _LOGGER.info("👌🏻 Dataset uploaded! 👌🏻")
     else:
         _LOGGER.info("🚀 Dataset already uploaded 🚀")
 
 
 def _prepare_entrypoint(model: tf.keras.Model, epochs: int, fine_tune: bool) -> Path:
+    """Prepare the entrypoint to be run on GCP."""
     _LOGGER.info("📝 Preparing entrypoint 📝")
     entrypoint_file = _CLOUD_DIR / "entrypoint.py"
 

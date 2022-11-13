@@ -21,17 +21,13 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
     :param fine_tune: Whether to fine-tune the model.
     """
     generator = tf.keras.preprocessing.image.ImageDataGenerator(
-        rotation_range=20,
-        height_shift_range=0.3,
-        width_shift_range=0.4,
-        zoom_range=0.4,
+        rotation_range=15,
+        height_shift_range=0.2,
+        width_shift_range=0.3,
+        zoom_range=0.2,
         horizontal_flip=True,
-        vertical_flip=True,
-        brightness_range=[0.3, 1.4],
+        brightness_range=[0.3, 1.7],
         fill_mode="nearest",
-        featurewise_std_normalization=True,
-        featurewise_center=True,
-        zca_whitening=True,
     )
 
     _LOGGER.info("📂 Loading dataset from %s 📂", _DATASET_DIRECTORY)
