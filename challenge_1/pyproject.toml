@@ -28,6 +28,7 @@ scikit-learn = "^1.0.2"
 seaborn = "^0.11.2"
 split-folders = "^0.5.1"
 tqdm = "^4.64.1"
+tensorflow-metal = "^0.6.0"
 
 
 [tool.poetry.group.dev.dependencies]
