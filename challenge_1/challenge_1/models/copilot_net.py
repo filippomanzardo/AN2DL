@@ -60,6 +60,7 @@ class CopilotModel(TrainableModel):
         test_set: Any | None = None,
         epochs: int = 10,
         verbose: int = 1,
+        callbacks: list[tf.keras.callbacks.Callback] | None = None,
     ) -> tf.keras.callbacks.History:
         training_set = self.preprocess(training_set)
 
@@ -68,6 +69,7 @@ class CopilotModel(TrainableModel):
             validation_data=validation_set,
             epochs=epochs,
             verbose=verbose,
+            callbacks=callbacks,
         )
 
         self.set_stats(history)

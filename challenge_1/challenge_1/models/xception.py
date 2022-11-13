@@ -62,6 +62,7 @@ class Xception(TrainableModel):
         test_set: Any | None = None,
         epochs: int = 10,
         verbose: int = 1,
+        callbacks: list[tf.keras.callbacks.Callback] | None = None,
     ) -> tf.keras.callbacks.History:
         training_set = self.preprocess(training_set)
         validation_set = self.preprocess(validation_set)
@@ -72,6 +73,7 @@ class Xception(TrainableModel):
             epochs=epochs,
             batch_size=16,
             verbose=verbose,
+            callbacks=callbacks,
         )
 
         self.set_stats(history)

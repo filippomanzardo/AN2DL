@@ -42,6 +42,7 @@ class TrainableModel(abc.ABC):
         test_set: Any | None = None,
         epochs: int = 10,
         verbose: int = 1,
+        callbacks: list[tf.keras.callbacks.Callback] | None = None,
     ) -> tf.keras.callbacks.History:
         """
         Train the model.
@@ -51,7 +52,8 @@ class TrainableModel(abc.ABC):
         :param test_set: The test set.
         :param epochs: The number of epochs to train for.
         :param verbose: The verbosity of the training.
-        :return: The history of the training.
+        :param callbacks: The callbacks to use.
+        :return: The training history.
         """
 
     @abc.abstractmethod

@@ -5,6 +5,7 @@ import tensorflow as tf
 
 from challenge_1.helpers.utils import prepare_submission
 from challenge_1.models import NET_TO_MODEL
+from challenge_1.training.callbacks import SaveBestModelInMemory
 
 _LOGGER = logging.getLogger(__name__)
 _DATASET_DIRECTORY = Path(".") / "dataset"
@@ -45,25 +46,34 @@ def train_net(net_name: str, epochs: int) -> None:
         else None
     )
 
-    model = NET_TO_MODEL[net_name]()  # type: ignore[abstract]
-
+    model_class = NET_TO_MODEL[net_name]()  # type: ignore[abstract]
+    save_callback = SaveBestModelInMemory(metric="val_loss" if validation_dataset else "loss")
     _LOGGER.info("🏃‍♂️ Training model 🏃‍♂️")
 
     try:
-        model.train(training_dataset, validation_dataset, epochs=epochs, verbose=1)
+        model_class.train(
+            training_dataset,
+            validation_dataset,
+            epochs=epochs,
+            verbose=1,
+            callbacks=[save_callback],
+        )
     except KeyboardInterrupt:
         _LOGGER.warning("🛑 Training interrupted 🛑")
         if input("❓ Do you want to save the model? [y/N] ❓\t") == "y":
-            prepare_submission(model, Path("submissions"))
+            model_class.model.set_weights(save_callback.best_weights)
+            prepare_submission(model_class, Path("submissions"))
         return
     except Exception:
         _LOGGER.exception("❌ Training failed ❌")
-        model.save(Path(".") / "failed_models")
+        model_class.model.set_weights(save_callback.best_weights)
+        model_class.save(Path(".") / "failed_models")
         raise
 
     try:
-        prepare_submission(model, Path("submissions"))
+        prepare_submission(model_class, Path("submissions"))
     except Exception:
-        _LOGGER.exception("❌ Training failed ❌")
-        model.save(Path(".") / "failed_models")
+        _LOGGER.exception("❌ Preparing submission failed ❌")
+        model_class.model.set_weights(save_callback.best_weights)
+        model_class.save(Path(".") / "failed_models")
         raise
