@@ -3,7 +3,7 @@ from typing import Any, cast
 import tensorflow as tf
 
 
-class SaveBestModelInMemory(tf.keras.callbacks.Callback):
+class SaveBestModelInMemory(tf.keras.callbacks.Callback):  # type: ignore[misc]
     def __init__(self, metric: str, max_is_zero: bool = True) -> None:
         self.save_best_metric = metric
         self.best_weights = None
