@@ -137,7 +137,7 @@ class TrainableModel:
         fine_tune_from = -50 if len(self._model.layers) > 100 else -10
 
         # Freeze all the layers before the `fine_tune_from` layer
-        for layer in self._model.layers[:fine_tune_from]:
+        for layer in self._model.layers[fine_tune_from:]:
             if not isinstance(layer, tf.keras.layers.BatchNormalization):
                 layer.trainable = True
 

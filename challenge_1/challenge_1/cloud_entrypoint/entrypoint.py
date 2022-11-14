@@ -40,7 +40,7 @@ TENSORBOARD_PATH = os.path.join(
 )
 CALLBACKS = [
     tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_PATH, histogram_freq=1),
-    tf.keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH),
+    tf.keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_best_only=True),
     tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=3),
 ]
 
