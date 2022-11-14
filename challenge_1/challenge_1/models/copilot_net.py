@@ -6,7 +6,12 @@ from challenge_1.models.base_model import TrainableModel
 
 
 class CopilotModel(TrainableModel):
-    """A model that can be trained and used to predict."""
+    """
+    A model that can be trained and used to predict.
+
+    This model was entirely written by GitHub Copilot.
+    It serves as a baseline for our local achievements.
+    """
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:

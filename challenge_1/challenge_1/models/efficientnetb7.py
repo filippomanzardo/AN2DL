@@ -6,7 +6,14 @@ from challenge_1.models.base_model import TrainableModel
 
 
 class EfficientNet(TrainableModel):
-    """A model that can be trained and used to predict."""
+    """
+    EfficientNet V2 models for Keras.
+
+    Reference: EfficientNetV2: Smaller Models and Faster Training (ICML 2021)
+                -> https://arxiv.org/abs/2104.00298
+    This model uses transfer learning from the Keras EfficientNet model, and optionally it can be
+    fine-tuned.
+    """
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:

@@ -6,7 +6,17 @@ from challenge_1.models.base_model import TrainableModel
 
 
 class Xception(TrainableModel):
-    """A model that can be trained and used to predict."""
+    """
+    Xception V1 model taken from Keras.
+
+    On ImageNet, this model gets to a top-1 validation accuracy of 0.790 and a top-5 validation
+    accuracy of 0.945.
+    Reference: Xception: Deep Learning with Depthwise Separable Convolutions (CVPR 2017)
+                -> https://arxiv.org/abs/1610.02357
+
+    This model uses transfer learning from the Keras Xception model, and optionally it can be
+    fine-tuned.
+    """
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:

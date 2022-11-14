@@ -6,6 +6,16 @@ from challenge_1.models.base_model import TrainableModel
 
 
 class ConvNext(TrainableModel):
+    """
+    ConvNeXt models for Keras.
+
+    Reference: A ConvNet for the 2020s (CVPR 2022) -> https://arxiv.org/abs/2201.03545
+    The base, large, and xlarge models were first pre-trained on the ImageNet-21k dataset and
+    then fine-tuned on the ImageNet-1k dataset.
+    This model uses transfer learning from the Keras ConvNeXt model, and optionally it can be
+    fine-tuned.
+    """
+
     @staticmethod
     def get_model() -> tf.keras.models.Model:
         base_model = tf.keras.applications.convnext.ConvNeXtBase(

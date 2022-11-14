@@ -7,7 +7,11 @@ from challenge_1.runtime.log import restore_stdout
 
 
 class TrainableModel:
-    """An abstract trainable model."""
+    """
+    A trainable model class.
+
+    This class contains all the base methods that most nets can inherit from.
+    """
 
     def __init__(self, optimizer: tf.keras.optimizers.Optimizer) -> None:
         """
@@ -28,12 +32,18 @@ class TrainableModel:
 
     @property
     def dependencies(self) -> list[str | tuple[str, str]]:
-        """Return the dependencies of this instance."""
+        """
+        Return the dependencies of this instance.
+
+        These dependencies are needed to be able to load the model after submission.
+        Add a string for a simple `import <string>` and a
+        tuple for a `from <string> import <string>`.
+        """
         return ["os", "tensorflow as tf", ("typing", "Any")]
 
     @property
     def model(self) -> tf.keras.models.Model:
-        """Return the model of this instance."""
+        """Return the Keras model of this instance."""
         return self._model
 
     @property
@@ -48,7 +58,7 @@ class TrainableModel:
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:
-        """Return the model of this instance."""
+        """Return the model definition of this instance."""
         raise NotImplementedError
 
     def save(self, path: Path) -> None:
@@ -73,6 +83,8 @@ class TrainableModel:
         """
         Train the model.
 
+        This method also accepts test data, which will be used to evaluate the model when the
+        training has ended.
         :param training_set: The training set.
         :param validation_set: The validation set.
         :param test_set: The test set.
@@ -133,7 +145,18 @@ class TrainableModel:
         callbacks: list[tf.keras.callbacks.Callback] | None = None,
         class_weight: dict[int, float] | None = None,
     ) -> tf.keras.callbacks.History:
-        """Fine tune the model."""
+        """
+        Fine tune the model.
+
+        :param training_set: The training set.
+        :param validation_set: The validation set.
+        :param test_set: The test set.
+        :param epochs: The number of epochs to train for.
+        :param verbose: The verbosity of the training.
+        :param callbacks: The callbacks to use.
+        :param class_weight: The class weights to use.
+        :return: The training history.
+        """
         self._fine_tuned = True
         self._model.trainable = False
         # Fine-tune these last layers
