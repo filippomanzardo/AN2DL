@@ -36,13 +36,14 @@ with tempfile.TemporaryDirectory() as temp_dir:
 
 
 generator = tf.keras.preprocessing.image.ImageDataGenerator(
-    rotation_range=15,
-    height_shift_range=0.2,
-    width_shift_range=0.3,
-    zoom_range=0.2,
+    rotation_range=20,
+    height_shift_range=0.3,
+    width_shift_range=0.4,
+    zoom_range=0.4,
     horizontal_flip=True,
-    brightness_range=[0.3, 1.7],
-    fill_mode="nearest",
+    vertical_flip=True,
+    brightness_range=[0.3,1.4],
+    fill_mode='nearest'
 )
 
 training_dataset = generator.flow_from_directory(
@@ -50,6 +51,13 @@ training_dataset = generator.flow_from_directory(
     target_size=(96, 96),
     color_mode="rgb",
 )
+
+class_list = training_dataset.classes.tolist()
+n_class = [class_list.count(i) for i in training_dataset.class_indices.values()]
+
+class_weight = {
+    idx: n_class[idx] / sum(n_class) for idx, class_appearances in enumerate(n_class)
+}
 
 model = get_model()
 model.compile(
@@ -65,7 +73,7 @@ else:
     epochs = __EPOCHS__
     batch_size = 128
 
-model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size, class_weight=class_weight)
 
 save_path = os.path.join("gs://", GCP_BUCKET, "__NET_NAME___" + datetime.now().strftime("%Y%m%d_%H%M%S"))
 
@@ -86,7 +94,7 @@ if __FINE_TUNING__:
         metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
     )
 
-    model.fit(preprocess(training_dataset), epochs=epochs, callbacks=FINE_TUNING_CALLBACK, batch_size=batch_size)
+    model.fit(preprocess(training_dataset), epochs=epochs, callbacks=FINE_TUNING_CALLBACK, batch_size=batch_size, class_weight=class_weight)
 
     save_path = os.path.join("gs://", GCP_BUCKET, "__NET_NAME___" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned")
 
