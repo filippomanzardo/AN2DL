@@ -1,46 +1,63 @@
 # We use __<something>__ to put placeholders that will be replaced
-import os
-import tempfile
-import zipfile
-from datetime import datetime
-
 import tensorflow as tf
-import tensorflow_cloud as tfc
+import zipfile
+import tempfile
+from datetime import datetime
+import os
 from google.cloud import storage
-
+import tensorflow_cloud as tfc
+from typing import Any
 
 def get_model() -> tf.keras.models.Model:
-    """Return the model of this instance."""
-    return tf.keras.models.Sequential(
-        [
-            tf.keras.layers.Conv2D(
-                filters=32,
-                kernel_size=(3, 3),
-                activation="relu",
-                input_shape=(96, 96, 3),
-            ),
-            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation="relu"),
-            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            tf.keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation="relu"),
-            tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(units=128, activation="relu"),
-            tf.keras.layers.Dense(units=8, activation="softmax"),
-        ]
-    )
+        base_model = tf.keras.applications.EfficientNetV2B3(
+            weights="imagenet",
+            input_shape=(96, 96, 3),
+            include_top=False,
+        )
+
+        base_model.trainable = False
+
+        inputs = tf.keras.Input(shape=(96, 96, 3))
+        x = base_model(inputs, training=False)
+
+        x = tf.keras.layers.GlobalAveragePooling2D()(x)
+        x = tf.keras.layers.Dense(
+            512,
+            kernel_initializer=tf.keras.initializers.GlorotUniform(),
+        )(x)
+        x = tf.keras.layers.LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Dropout(0.2)(x)
+        x = tf.keras.layers.Dense(
+            128,
+            kernel_initializer=tf.keras.initializers.GlorotUniform(),
+        )(x)
+        x = tf.keras.layers.LeakyReLU()(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Dropout(0.2)(x)
+        outputs = tf.keras.layers.Dense(
+            8,
+            activation="softmax",
+            kernel_initializer=tf.keras.initializers.GlorotUniform(),
+        )(x)
+
+        return tf.keras.Model(inputs, outputs)
+
+
+def preprocess(X: Any) -> Any:
+        """Preprocess the input."""
+
+        return tf.keras.applications.efficientnet.preprocess_input(X)
 
 
 GCP_BUCKET = "polimi-training"
-CHECKPOINT_PATH = os.path.join(
-    "gs://", GCP_BUCKET, "challenge_1", "save_at_{epoch}_", datetime.now().strftime("%Y%m%d-%H%M%S")
-)
+CHECKPOINT_PATH = os.path.join("gs://", GCP_BUCKET, "challenge_1", "EfficientNet_save_at_{epoch}_", datetime.now().strftime("%Y%m%d-%H%M%S"))
 TENSORBOARD_PATH = os.path.join(
     "gs://", GCP_BUCKET, "logs", datetime.now().strftime("%Y%m%d-%H%M%S")
 )
 CALLBACKS = [
     tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_PATH, histogram_freq=1),
-    tf.keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH, save_best_only=True),
+    tf.keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH),
     tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=3),
 ]
 
@@ -58,13 +75,12 @@ with tempfile.TemporaryDirectory() as temp_dir:
 
 
 generator = tf.keras.preprocessing.image.ImageDataGenerator(
-    rotation_range=20,
-    height_shift_range=0.3,
-    width_shift_range=0.4,
-    zoom_range=0.4,
+    rotation_range=15,
+    height_shift_range=0.2,
+    width_shift_range=0.3,
+    zoom_range=0.2,
     horizontal_flip=True,
-    vertical_flip=True,
-    brightness_range=[0.3, 1.4],
+    brightness_range=[0.3, 1.7],
     fill_mode="nearest",
 )
 
@@ -82,20 +98,20 @@ model.compile(
 )
 
 if tfc.remote():
-    epochs = 3
+    epochs = 50
     batch_size = 16
 else:
     epochs = 10
     batch_size = 128
 
-model.fit(training_dataset, epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
 
 save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
 
 if tfc.remote():
     model.save(save_path)
 
-if True:
+if False:
     model.trainable = False
     fine_tune_from = -50 if len(model.layers) > 100 else -25
 
@@ -109,11 +125,11 @@ if True:
         metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
     )
 
-    model.fit(training_dataset, epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+    model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
 
-    save_path = os.path.join(
-        "gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned"
-    )
+    save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned")
 
     if tfc.remote():
         model.save(save_path)
+
+

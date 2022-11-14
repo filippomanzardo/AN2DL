@@ -35,12 +35,12 @@ def train_on_gcp(net_name: str, epochs: int, fine_tune: bool) -> None:
     entry_point = _prepare_entrypoint(model, epochs, fine_tune)
 
     _LOGGER.info("🚀 Training model 🚀")
-    tfc.run(
-        entry_point=str(entry_point),
-        distribution_strategy="auto",
-        requirements_txt=str(_CLOUD_DIR / "requirements.txt"),
-        docker_image_bucket_name=GCP_BUCKET,
-    )
+    # tfc.run(
+    #     entry_point=str(entry_point),
+    #     distribution_strategy="auto",
+    #     requirements_txt=str(_CLOUD_DIR / "requirements.txt"),
+    #     docker_image_bucket_name=GCP_BUCKET,
+    # )
 
 
 def _upload_dataset_if_not_exists() -> None:
@@ -75,6 +75,11 @@ def _prepare_entrypoint(model: tf.keras.Model, epochs: int, fine_tune: bool) -> 
         )
         .replace("__EPOCHS__", str(epochs))
         .replace("__FINE_TUNING__", str(fine_tune))
+        .replace("__NET_NAME__", model.__class__.__name__)
+        .replace(
+            "__PREPROCESS_HERE__",
+            inspect.getsource(model.preprocess).replace("self, ", "").lstrip(),
+        )
     )
 
     _LOGGER.info("👌🏻 Entrypoint ready! 👌🏻")

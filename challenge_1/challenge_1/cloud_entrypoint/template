@@ -6,11 +6,14 @@ from datetime import datetime
 import os
 from google.cloud import storage
 import tensorflow_cloud as tfc
+from typing import Any
 
 __MODEL_FUNCTION_HERE__
 
+__PREPROCESS_HERE__
+
 GCP_BUCKET = "polimi-training"
-CHECKPOINT_PATH = os.path.join("gs://", GCP_BUCKET, "challenge_1", "save_at_{epoch}_", datetime.now().strftime("%Y%m%d-%H%M%S"))
+CHECKPOINT_PATH = os.path.join("gs://", GCP_BUCKET, "challenge_1", "__NET_NAME___save_at_{epoch}_", datetime.now().strftime("%Y%m%d-%H%M%S"))
 TENSORBOARD_PATH = os.path.join(
     "gs://", GCP_BUCKET, "logs", datetime.now().strftime("%Y%m%d-%H%M%S")
 )
@@ -63,7 +66,7 @@ else:
     epochs = 10
     batch_size = 128
 
-model.fit(training_dataset, epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
 
 save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
 
@@ -84,7 +87,7 @@ if __FINE_TUNING__:
         metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
     )
 
-    model.fit(training_dataset, epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+    model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
 
     save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned")
 
