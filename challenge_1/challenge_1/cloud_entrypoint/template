@@ -67,7 +67,7 @@ else:
 
 model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
 
-save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
+save_path = os.path.join("gs://", GCP_BUCKET, "__NET_NAME___" + datetime.now().strftime("%Y%m%d_%H%M%S"))
 
 if tfc.remote():
     model.save(save_path)
