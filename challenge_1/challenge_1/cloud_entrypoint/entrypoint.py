@@ -84,12 +84,13 @@ with tempfile.TemporaryDirectory() as temp_dir:
 
 
 generator = tf.keras.preprocessing.image.ImageDataGenerator(
-    rotation_range=15,
-    height_shift_range=0.2,
-    width_shift_range=0.3,
-    zoom_range=0.2,
+    rotation_range=20,
+    height_shift_range=0.3,
+    width_shift_range=0.4,
+    zoom_range=0.4,
     horizontal_flip=True,
-    brightness_range=[0.3, 1.7],
+    vertical_flip=True,
+    brightness_range=[0.3, 1.4],
     fill_mode="nearest",
 )
 
@@ -99,6 +100,11 @@ training_dataset = generator.flow_from_directory(
     color_mode="rgb",
 )
 
+class_list = training_dataset.classes.tolist()
+n_class = [class_list.count(i) for i in training_dataset.class_indices.values()]
+
+class_weight = {idx: n_class[idx] / sum(n_class) for idx, class_appearances in enumerate(n_class)}
+
 model = get_model()
 model.compile(
     optimizer=tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.9),
@@ -107,20 +113,28 @@ model.compile(
 )
 
 if tfc.remote():
-    epochs = 25
+    epochs = 50
     batch_size = 16
 else:
-    epochs = 25
+    epochs = 50
     batch_size = 128
 
-model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+model.fit(
+    preprocess(training_dataset),
+    epochs=epochs,
+    callbacks=CALLBACKS,
+    batch_size=batch_size,
+    class_weight=class_weight,
+)
 
-save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
+save_path = os.path.join(
+    "gs://", GCP_BUCKET, "ConvNext_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+)
 
 if tfc.remote():
     model.save(save_path)
 
-if True:
+if False:
     model.trainable = False
     fine_tune_from = -50 if len(model.layers) > 100 else -25
 
@@ -139,6 +153,7 @@ if True:
         epochs=epochs,
         callbacks=FINE_TUNING_CALLBACK,
         batch_size=batch_size,
+        class_weight=class_weight,
     )
 
     save_path = os.path.join(

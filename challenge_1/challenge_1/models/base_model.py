@@ -68,6 +68,7 @@ class TrainableModel:
         epochs: int = 10,
         verbose: int = 1,
         callbacks: list[tf.keras.callbacks.Callback] | None = None,
+        class_weight: dict[int, float] | None = None,
     ) -> tf.keras.callbacks.History:
         """
         Train the model.
@@ -78,6 +79,7 @@ class TrainableModel:
         :param epochs: The number of epochs to train for.
         :param verbose: The verbosity of the training.
         :param callbacks: The callbacks to use.
+        :param class_weight: The class weights to use.
         :return: The training history.
         """
         training_set = self.preprocess(training_set)
@@ -90,6 +92,7 @@ class TrainableModel:
             batch_size=16,
             verbose=verbose,
             callbacks=callbacks,
+            class_weight=class_weight,
         )
 
         self.set_stats(history)
@@ -128,6 +131,7 @@ class TrainableModel:
         epochs: int = 10,
         verbose: int = 1,
         callbacks: list[tf.keras.callbacks.Callback] | None = None,
+        class_weight: dict[int, float] | None = None,
     ) -> tf.keras.callbacks.History:
         """Fine tune the model."""
         self._fine_tuned = True
@@ -153,4 +157,5 @@ class TrainableModel:
             epochs=epochs,
             verbose=verbose,
             callbacks=callbacks,
+            class_weight=class_weight,
         )

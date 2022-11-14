@@ -37,6 +37,14 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
         color_mode="rgb",
     )
 
+    class_list = training_dataset.classes.tolist()
+    n_class = [class_list.count(i) for i in training_dataset.class_indices.values()]
+
+    class_weights = {
+        idx: n_class[idx] / sum(n_class) for idx, class_appearances in enumerate(n_class)
+    }
+    _LOGGER.info("📊 Class weights: %s 📊", class_weights)
+
     validation_dataset = (
         generator.flow_from_directory(
             directory=_DATASET_DIRECTORY,
@@ -59,6 +67,7 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
         training_dataset=training_dataset,
         validation_dataset=validation_dataset,
         epochs=epochs,
+        class_weight=class_weights,
     )
 
     if fine_tune:
@@ -68,6 +77,7 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
             training_dataset=training_dataset,
             validation_dataset=validation_dataset,
             epochs=epochs,
+            class_weight=class_weights,
         )
 
 
@@ -77,6 +87,7 @@ def _train_and_publish(
     epochs: int,
     training_dataset: Any,
     validation_dataset: Any,
+    class_weight: dict[int, float],
 ) -> None:
 
     save_callback = SaveBestModelInMemory(metric="val_loss" if validation_dataset else "loss")
@@ -88,6 +99,7 @@ def _train_and_publish(
             epochs=epochs,
             verbose=1,
             callbacks=[save_callback],
+            class_weight=class_weight,
         )
     except KeyboardInterrupt:
         _LOGGER.warning("🛑 Training interrupted 🛑")
