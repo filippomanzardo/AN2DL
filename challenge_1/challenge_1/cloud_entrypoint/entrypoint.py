@@ -1,57 +1,65 @@
 # We use __<something>__ to put placeholders that will be replaced
-import tensorflow as tf
-import zipfile
-import tempfile
-from datetime import datetime
 import os
-from google.cloud import storage
-import tensorflow_cloud as tfc
+import tempfile
+import zipfile
+from datetime import datetime
 from typing import Any
 
+import tensorflow as tf
+import tensorflow_cloud as tfc
+from google.cloud import storage
+
+
 def get_model() -> tf.keras.models.Model:
-        base_model = tf.keras.applications.EfficientNetV2B3(
-            weights="imagenet",
-            input_shape=(96, 96, 3),
-            include_top=False,
-        )
+    base_model = tf.keras.applications.EfficientNetV2B3(
+        weights="imagenet",
+        input_shape=(96, 96, 3),
+        include_top=False,
+    )
 
-        base_model.trainable = False
+    base_model.trainable = False
 
-        inputs = tf.keras.Input(shape=(96, 96, 3))
-        x = base_model(inputs, training=False)
+    inputs = tf.keras.Input(shape=(96, 96, 3))
+    x = base_model(inputs, training=False)
 
-        x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        x = tf.keras.layers.Dense(
-            512,
-            kernel_initializer=tf.keras.initializers.GlorotUniform(),
-        )(x)
-        x = tf.keras.layers.LeakyReLU()(x)
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.Dropout(0.2)(x)
-        x = tf.keras.layers.Dense(
-            128,
-            kernel_initializer=tf.keras.initializers.GlorotUniform(),
-        )(x)
-        x = tf.keras.layers.LeakyReLU()(x)
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.Dropout(0.2)(x)
-        outputs = tf.keras.layers.Dense(
-            8,
-            activation="softmax",
-            kernel_initializer=tf.keras.initializers.GlorotUniform(),
-        )(x)
+    x = tf.keras.layers.GlobalAveragePooling2D()(x)
+    x = tf.keras.layers.Dense(
+        512,
+        kernel_initializer=tf.keras.initializers.GlorotUniform(),
+    )(x)
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
+    x = tf.keras.layers.Dense(
+        128,
+        kernel_initializer=tf.keras.initializers.GlorotUniform(),
+    )(x)
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
+    outputs = tf.keras.layers.Dense(
+        8,
+        activation="softmax",
+        kernel_initializer=tf.keras.initializers.GlorotUniform(),
+    )(x)
 
-        return tf.keras.Model(inputs, outputs)
+    return tf.keras.Model(inputs, outputs)
 
 
 def preprocess(X: Any) -> Any:
-        """Preprocess the input."""
+    """Preprocess the input."""
 
-        return tf.keras.applications.efficientnet.preprocess_input(X)
+    return tf.keras.applications.efficientnet.preprocess_input(X)
 
 
 GCP_BUCKET = "polimi-training"
-CHECKPOINT_PATH = os.path.join("gs://", GCP_BUCKET, "challenge_1", "EfficientNet_save_at_{epoch}_", datetime.now().strftime("%Y%m%d-%H%M%S"))
+CHECKPOINT_PATH = os.path.join(
+    "gs://",
+    GCP_BUCKET,
+    "challenge_1",
+    "EfficientNet_save_at_{epoch}_",
+    datetime.now().strftime("%Y%m%d-%H%M%S"),
+)
 TENSORBOARD_PATH = os.path.join(
     "gs://", GCP_BUCKET, "logs", datetime.now().strftime("%Y%m%d-%H%M%S")
 )
@@ -125,11 +133,13 @@ if False:
         metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
     )
 
-    model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+    model.fit(
+        preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size
+    )
 
-    save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned")
+    save_path = os.path.join(
+        "gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned"
+    )
 
     if tfc.remote():
         model.save(save_path)
-
-
