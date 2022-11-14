@@ -40,6 +40,8 @@ def train_on_gcp(net_name: str, epochs: int, fine_tune: bool) -> None:
         distribution_strategy="auto",
         requirements_txt=str(_CLOUD_DIR / "requirements.txt"),
         docker_image_bucket_name=GCP_BUCKET,
+        docker_base_image="tensorflow/tensorflow:latest-gpu",
+        chief_config=tfc.COMMON_MACHINE_CONFIGS["P4_1X"],
     )
 
 

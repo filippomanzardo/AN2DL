@@ -39,4 +39,4 @@ class Xception(TrainableModel):
     def preprocess(self, X: Any) -> Any:
         """Preprocess the input."""
 
-        return tf.keras.applications.xception.preprocess_input(X)
+        return tf.keras.applications.efficientnet_v2.preprocess_input(X)

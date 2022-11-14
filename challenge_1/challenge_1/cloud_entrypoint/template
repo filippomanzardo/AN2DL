@@ -19,9 +19,8 @@ TENSORBOARD_PATH = os.path.join(
 )
 CALLBACKS = [
     tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_PATH, histogram_freq=1),
-    tf.keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH),
-    tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=3),
 ]
+FINE_TUNING_CALLBACK = [tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_PATH + "_tuned", histogram_freq=1)]
 
 client = storage.Client()
 bucket = client.get_bucket(GCP_BUCKET)
@@ -54,7 +53,7 @@ training_dataset = generator.flow_from_directory(
 
 model = get_model()
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    optimizer=tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.9),
     loss=tf.keras.losses.CategoricalCrossentropy(),
     metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
 )
@@ -63,7 +62,7 @@ if tfc.remote():
     epochs = __EPOCHS__
     batch_size = 16
 else:
-    epochs = 10
+    epochs = __EPOCHS__
     batch_size = 128
 
 model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
@@ -87,9 +86,9 @@ if __FINE_TUNING__:
         metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
     )
 
-    model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
+    model.fit(preprocess(training_dataset), epochs=epochs, callbacks=FINE_TUNING_CALLBACK, batch_size=batch_size)
 
-    save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned")
+    save_path = os.path.join("gs://", GCP_BUCKET, "__NET_NAME___" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned")
 
     if tfc.remote():
         model.save(save_path)

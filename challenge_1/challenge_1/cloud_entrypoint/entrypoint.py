@@ -11,15 +11,15 @@ from google.cloud import storage
 
 
 def get_model() -> tf.keras.models.Model:
-    base_model = tf.keras.applications.EfficientNetV2B3(
+    base_model = tf.keras.applications.convnext.ConvNeXtBase(
         weights="imagenet",
         input_shape=(96, 96, 3),
         include_top=False,
     )
-
     base_model.trainable = False
 
     inputs = tf.keras.Input(shape=(96, 96, 3))
+
     x = base_model(inputs, training=False)
 
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
@@ -49,7 +49,7 @@ def get_model() -> tf.keras.models.Model:
 def preprocess(X: Any) -> Any:
     """Preprocess the input."""
 
-    return tf.keras.applications.efficientnet.preprocess_input(X)
+    return tf.keras.applications.convnext.preprocess_input(X)
 
 
 GCP_BUCKET = "polimi-training"
@@ -57,7 +57,7 @@ CHECKPOINT_PATH = os.path.join(
     "gs://",
     GCP_BUCKET,
     "challenge_1",
-    "EfficientNet_save_at_{epoch}_",
+    "ConvNext_save_at_{epoch}_",
     datetime.now().strftime("%Y%m%d-%H%M%S"),
 )
 TENSORBOARD_PATH = os.path.join(
@@ -65,8 +65,9 @@ TENSORBOARD_PATH = os.path.join(
 )
 CALLBACKS = [
     tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_PATH, histogram_freq=1),
-    tf.keras.callbacks.ModelCheckpoint(CHECKPOINT_PATH),
-    tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=3),
+]
+FINE_TUNING_CALLBACK = [
+    tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_PATH + "_tuned", histogram_freq=1)
 ]
 
 client = storage.Client()
@@ -100,16 +101,16 @@ training_dataset = generator.flow_from_directory(
 
 model = get_model()
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    optimizer=tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.9),
     loss=tf.keras.losses.CategoricalCrossentropy(),
     metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
 )
 
 if tfc.remote():
-    epochs = 50
+    epochs = 25
     batch_size = 16
 else:
-    epochs = 10
+    epochs = 25
     batch_size = 128
 
 model.fit(preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size)
@@ -119,7 +120,7 @@ save_path = os.path.join("gs://", GCP_BUCKET, "model_" + datetime.now().strftime
 if tfc.remote():
     model.save(save_path)
 
-if False:
+if True:
     model.trainable = False
     fine_tune_from = -50 if len(model.layers) > 100 else -25
 
@@ -134,11 +135,14 @@ if False:
     )
 
     model.fit(
-        preprocess(training_dataset), epochs=epochs, callbacks=CALLBACKS, batch_size=batch_size
+        preprocess(training_dataset),
+        epochs=epochs,
+        callbacks=FINE_TUNING_CALLBACK,
+        batch_size=batch_size,
     )
 
     save_path = os.path.join(
-        "gs://", GCP_BUCKET, "model_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned"
+        "gs://", GCP_BUCKET, "ConvNext_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned"
     )
 
     if tfc.remote():
