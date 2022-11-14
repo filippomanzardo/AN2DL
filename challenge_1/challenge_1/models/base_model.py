@@ -108,8 +108,7 @@ class TrainableModel:
         :param X: The input.
         :return: The preprocessed input.
         """
-        X = self.preprocess(X)
-        return tf.argmax(self._model.predict(X), axis=-1)
+        raise NotImplementedError
 
     def predict(self, X: Any) -> tf.Tensor:
         """Predict the output for the given input."""
