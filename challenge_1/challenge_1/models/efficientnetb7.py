@@ -17,7 +17,7 @@ class EfficientNet(TrainableModel):
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:
-        base_model = tf.keras.applications.EfficientNetV2B3(
+        base_model = tf.keras.applications.EfficientNetV2L(
             weights="imagenet",
             input_shape=(96, 96, 3),
             include_top=False,
