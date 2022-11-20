@@ -17,12 +17,12 @@ class EfficientNet(TrainableModel):
 
     @staticmethod
     def get_model() -> tf.keras.models.Model:
-        base_model = tf.keras.applications.EfficientNetV2B3(
+        base_model = tf.keras.applications.EfficientNetV2L(
             weights="imagenet",
             input_shape=(96, 96, 3),
             include_top=False,
         )
-
+        base_model._name = "base_model"
         base_model.trainable = False
 
         inputs = tf.keras.Input(shape=(96, 96, 3))
@@ -54,4 +54,4 @@ class EfficientNet(TrainableModel):
     def preprocess(self, X: Any) -> Any:
         """Preprocess the input."""
 
-        return tf.keras.applications.efficientnet.preprocess_input(X)
+        return tf.keras.applications.efficientnet_v2.preprocess_input(X)

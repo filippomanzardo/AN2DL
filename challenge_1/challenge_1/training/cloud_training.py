@@ -41,7 +41,7 @@ def train_on_gcp(net_name: str, epochs: int, fine_tune: bool) -> None:
         requirements_txt=str(_CLOUD_DIR / "requirements.txt"),
         docker_image_bucket_name=GCP_BUCKET,
         docker_base_image="tensorflow/tensorflow:latest-gpu",
-        chief_config=tfc.COMMON_MACHINE_CONFIGS["P4_1X"],
+        chief_config=tfc.COMMON_MACHINE_CONFIGS["T4_1X"],
     )
 
 
@@ -69,7 +69,7 @@ def _prepare_entrypoint(model: tf.keras.Model, epochs: int, fine_tune: bool) -> 
     _LOGGER.info("📝 Preparing entrypoint 📝")
     entrypoint_file = _CLOUD_DIR / "entrypoint.py"
 
-    template = (_CLOUD_DIR / "template").read_text()
+    template = (_CLOUD_DIR / "template.py").read_text()
     entrypoint_file.write_text(
         template.replace(
             "__MODEL_FUNCTION_HERE__",

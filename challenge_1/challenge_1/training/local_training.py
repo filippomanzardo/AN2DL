@@ -20,29 +20,23 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
     :param epochs: The number of epochs to train for.
     :param fine_tune: Whether to fine-tune the model.
     """
-    generator = tf.keras.preprocessing.image.ImageDataGenerator(
-        rotation_range=15,
-        height_shift_range=0.2,
-        width_shift_range=0.3,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        brightness_range=[0.3, 1.7],
-        fill_mode="nearest",
-    )
+    generator = tf.keras.preprocessing.image.ImageDataGenerator()
 
     _LOGGER.info("📂 Loading dataset from %s 📂", _DATASET_DIRECTORY)
     training_dataset = generator.flow_from_directory(
         directory=_DATASET_DIRECTORY,
         target_size=(96, 96),
         color_mode="rgb",
+        subset="training",
     )
 
     class_list = training_dataset.classes.tolist()
     n_class = [class_list.count(i) for i in training_dataset.class_indices.values()]
 
     class_weights = {
-        idx: n_class[idx] / sum(n_class) for idx, class_appearances in enumerate(n_class)
+        idx: max(n_class) / (n_class[idx]) for idx, class_appearances in enumerate(n_class)
     }
+
     _LOGGER.info("📊 Class weights: %s 📊", class_weights)
 
     validation_dataset = (
@@ -58,7 +52,7 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
         else None
     )
 
-    model_class = NET_TO_MODEL[net_name](optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
+    model_class = NET_TO_MODEL[net_name](optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5))
     _LOGGER.info("🏃‍♂️ Training model 🏃‍♂️")
 
     _train_and_publish(

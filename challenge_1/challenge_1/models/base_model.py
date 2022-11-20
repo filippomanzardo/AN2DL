@@ -164,7 +164,10 @@ class TrainableModel:
 
         # Freeze all the layers before the `fine_tune_from` layer
         for layer in self._model.layers[fine_tune_from:]:
-            if not isinstance(layer, tf.keras.layers.BatchNormalization):
+            if not (
+                isinstance(layer, tf.keras.layers.BatchNormalization)
+                or isinstance(layer, tf.keras.layers.LayerNormalization)
+            ):
                 layer.trainable = True
 
         self._model.compile(
