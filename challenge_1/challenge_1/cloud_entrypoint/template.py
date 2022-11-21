@@ -1,3 +1,4 @@
+# type: ignore
 # We use __<something>__ to put placeholders that will be replaced
 import os
 import tempfile
@@ -9,56 +10,16 @@ import tensorflow as tf
 import tensorflow_cloud as tfc
 from google.cloud import storage
 
+__MODEL_FUNCTION_HERE__
 
-def get_model() -> tf.keras.models.Model:
-
-    base_model = tf.keras.applications.convnext.ConvNeXtXLarge(
-        weights="imagenet",
-        input_shape=(96, 96, 3),
-        include_top=False,
-    )
-    base_model._name = "base_model"
-    base_model.trainable = False
-
-    inputs = tf.keras.Input(shape=(96, 96, 3))
-    data_augmentation = tf.keras.Sequential(
-        [
-            tf.keras.layers.RandomZoom(0.3),
-            tf.keras.layers.RandomContrast(0.4),
-            tf.keras.layers.RandomRotation(0.1),
-            tf.keras.layers.RandomBrightness(0.3),
-        ]
-    )(inputs)
-    x = base_model(data_augmentation, training=False)
-    x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    x = tf.keras.layers.ELU(alpha=1.5)(x)
-    x = tf.keras.layers.Dropout(0.3)(x)
-    x = tf.keras.layers.Dense(
-        128,
-        kernel_initializer=tf.keras.initializers.GlorotUniform(),
-    )(x)
-    x = tf.keras.layers.ELU(alpha=0.5)(x)
-    outputs = tf.keras.layers.Dense(
-        8,
-        activation="softmax",
-        kernel_initializer=tf.keras.initializers.GlorotUniform(),
-    )(x)
-
-    return tf.keras.Model(inputs, outputs)
-
-
-def preprocess(X: Any) -> Any:
-    """Preprocess the input."""
-
-    return tf.keras.applications.convnext.preprocess_input(X)
-
+__PREPROCESS_HERE__
 
 GCP_BUCKET = "polimi-training"
 CHECKPOINT_PATH = os.path.join(
     "gs://",
     GCP_BUCKET,
     "challenge_1",
-    "ConvNext_save_at_{epoch}_",
+    "__NET_NAME___save_at_{epoch}_",
     datetime.now().strftime("%Y%m%d-%H%M%S"),
 )
 TENSORBOARD_PATH = os.path.join(
@@ -120,7 +81,7 @@ model.compile(
     metrics=["accuracy"],
 )
 
-epochs = 600
+epochs = __EPOCHS__
 batch_size = 16
 
 model.fit(
@@ -133,13 +94,13 @@ model.fit(
 )
 
 save_path = os.path.join(
-    "gs://", GCP_BUCKET, "ConvNext_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+    "gs://", GCP_BUCKET, "__NET_NAME___" + datetime.now().strftime("%Y%m%d_%H%M%S")
 )
 
 if tfc.remote():
     model.save(save_path)
 
-if True:
+if __FINE_TUNING__:
     base_model = next((layer for layer in model.layers if layer.name == "base_model"))
     fine_tune_at = len(base_model.layers) - 50
     base_model.trainable = True
@@ -164,7 +125,7 @@ if True:
     save_path = os.path.join(
         "gs://",
         GCP_BUCKET,
-        "ConvNext_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned",
+        "__NET_NAME___" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_fine_tuned",
     )
 
     if tfc.remote():
