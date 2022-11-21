@@ -1,6 +1,7 @@
 import logging
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import tensorflow as tf
 
@@ -12,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 _DATASET_DIRECTORY = Path(".") / "dataset"
 
 
-def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
+def train_net(net_name: str, epochs: int, fine_tune: bool, data_augmentation: bool = True) -> None:
     """
     Train the given net.
 
@@ -21,13 +22,10 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
     :param fine_tune: Whether to fine-tune the model.
     """
     generator = tf.keras.preprocessing.image.ImageDataGenerator(
-        rotation_range=15,
-        height_shift_range=0.2,
-        width_shift_range=0.3,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        brightness_range=[0.3, 1.7],
-        fill_mode="nearest",
+        horizontal_flip=data_augmentation,
+        vertical_flip=data_augmentation,
+        brightness_range=[0.8, 1.2] if data_augmentation else None,
+        validation_split=0.1,
     )
 
     _LOGGER.info("📂 Loading dataset from %s 📂", _DATASET_DIRECTORY)
@@ -35,30 +33,27 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
         directory=_DATASET_DIRECTORY,
         target_size=(96, 96),
         color_mode="rgb",
+        subset="training",
+    )
+    #
+    # class_list = training_dataset.classes.tolist()
+    # n_class = [class_list.count(i) for i in training_dataset.class_indices.values()]
+    #
+    # class_weights = {
+    #     idx: n_class[idx] / sum(n_class) for idx, class_appearances in enumerate(n_class)
+    # }
+    # _LOGGER.info("📊 Class weights: %s 📊", class_weights)
+
+    validation_dataset = generator.flow_from_directory(
+        directory=_DATASET_DIRECTORY,
+        target_size=(96, 96),
+        color_mode="rgb",
+        subset="validation",
+        save_format="jpg",
+        shuffle=False,
     )
 
-    class_list = training_dataset.classes.tolist()
-    n_class = [class_list.count(i) for i in training_dataset.class_indices.values()]
-
-    class_weights = {
-        idx: n_class[idx] / sum(n_class) for idx, class_appearances in enumerate(n_class)
-    }
-    _LOGGER.info("📊 Class weights: %s 📊", class_weights)
-
-    validation_dataset = (
-        generator.flow_from_directory(
-            directory=_DATASET_DIRECTORY,
-            target_size=(96, 96),
-            color_mode="rgb",
-            subset="validation",
-            save_format="jpg",
-            shuffle=False,
-        )
-        if generator._validation_split
-        else None
-    )
-
-    model_class = NET_TO_MODEL[net_name](optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
+    model_class = NET_TO_MODEL[net_name](optimizer=tf.keras.optimizers.(learning_rate=0.001))
     _LOGGER.info("🏃‍♂️ Training model 🏃‍♂️")
 
     _train_and_publish(
@@ -67,7 +62,7 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
         training_dataset=training_dataset,
         validation_dataset=validation_dataset,
         epochs=epochs,
-        class_weight=class_weights,
+        # class_weight=class_weights,
     )
 
     if fine_tune:
@@ -77,7 +72,7 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
             training_dataset=training_dataset,
             validation_dataset=validation_dataset,
             epochs=epochs,
-            class_weight=class_weights,
+            # class_weight=class_weights,
         )
 
 
@@ -87,10 +82,13 @@ def _train_and_publish(
     epochs: int,
     training_dataset: Any,
     validation_dataset: Any,
-    class_weight: dict[int, float],
+    class_weight: Optional[dict[int, float]] = None,
 ) -> None:
 
-    save_callback = SaveBestModelInMemory(metric="val_loss" if validation_dataset else "loss")
+    save_callback = SaveBestModelInMemory(metric="val_loss")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(
+        log_dir=f"./logs/{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    )
 
     try:
         train(
@@ -98,7 +96,7 @@ def _train_and_publish(
             validation_dataset,
             epochs=epochs,
             verbose=1,
-            callbacks=[save_callback],
+            callbacks=[save_callback, tensorboard_callback],
             class_weight=class_weight,
         )
     except KeyboardInterrupt:
