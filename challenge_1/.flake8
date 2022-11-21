@@ -3,7 +3,7 @@ exclude =
     .venv |
     dataset |
     *submissions |
-    template.py
+    **/template.py
 
 max-line-length = 100
 

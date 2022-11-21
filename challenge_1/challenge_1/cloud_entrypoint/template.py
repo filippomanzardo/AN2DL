@@ -1,3 +1,4 @@
+# type: ignore
 # We use __<something>__ to put placeholders that will be replaced
 import os
 import tempfile
