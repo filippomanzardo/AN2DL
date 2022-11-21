@@ -223,7 +223,7 @@ if __FINE_TUNING__:
             layer.trainable = False
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-6),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
         loss=tf.keras.losses.CategoricalCrossentropy(),
         metrics=["accuracy"],
     )
