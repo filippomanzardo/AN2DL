@@ -27,29 +27,14 @@ class Xception(TrainableModel):
             include_top=False,
         )
         base_model._name = "base_model"
-        base_model.trainable = False
 
         inputs = tf.keras.Input(shape=(96, 96, 3))
-        x = tf.keras.applications.xception.preprocess_input(inputs)
-        x = base_model(x, training=False)
+        x = base_model(inputs, training=False)
         x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        x = tf.keras.layers.Dense(
-            1024,
-            kernel_initializer=tf.keras.initializers.GlorotUniform(),
-        )(x)
-
-        x = tf.keras.layers.LeakyReLU()(x)
         x = tf.keras.layers.Dense(
             512,
             kernel_initializer=tf.keras.initializers.GlorotUniform(),
         )(x)
-
-        x = tf.keras.layers.LeakyReLU()(x)
-        x = tf.keras.layers.Dense(
-            128,
-            kernel_initializer=tf.keras.initializers.GlorotUniform(),
-        )(x)
-
         x = tf.keras.layers.LeakyReLU()(x)
         x = tf.keras.layers.Dropout(0.3)(x)
         outputs = tf.keras.layers.Dense(

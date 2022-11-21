@@ -75,7 +75,7 @@ class_weight = {idx: max(n_class) / (n_class[idx]) for idx, class_appearances in
 model = get_model()
 
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(learning_rate=5e-4),
+    optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
     loss=tf.keras.losses.CategoricalCrossentropy(),
     metrics=["accuracy"],
 )
@@ -100,14 +100,14 @@ if tfc.remote():
     model.save(save_path)
 
 if __FINE_TUNING__:
-    fine_tune_at = len(model.layers) - 50
     base_model = next((layer for layer in model.layers if layer.name == "base_model"))
+    fine_tune_at = len(base_model.layers) - 50
     base_model.trainable = True
     for layer in base_model.layers[:fine_tune_at]:
         layer.trainable = False
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-6),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
         loss=tf.keras.losses.CategoricalCrossentropy(),
         metrics=["accuracy"],
     )

@@ -28,16 +28,20 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
         target_size=(96, 96),
         color_mode="rgb",
         subset="training",
+        batch_size=16,
+        class_mode="categorical",
+        shuffle=True,
+        seed=0,
     )
 
     class_list = training_dataset.classes.tolist()
     n_class = [class_list.count(i) for i in training_dataset.class_indices.values()]
 
-    class_weights = {
+    class_weight = {
         idx: max(n_class) / (n_class[idx]) for idx, class_appearances in enumerate(n_class)
     }
 
-    _LOGGER.info("📊 Class weights: %s 📊", class_weights)
+    _LOGGER.info("📊 Class weights: %s 📊", class_weight)
 
     validation_dataset = (
         generator.flow_from_directory(
@@ -61,7 +65,7 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
         training_dataset=training_dataset,
         validation_dataset=validation_dataset,
         epochs=epochs,
-        class_weight=class_weights,
+        class_weight=class_weight,
     )
 
     if fine_tune:
@@ -71,7 +75,7 @@ def train_net(net_name: str, epochs: int, fine_tune: bool) -> None:
             training_dataset=training_dataset,
             validation_dataset=validation_dataset,
             epochs=epochs,
-            class_weight=class_weights,
+            class_weight=class_weight,
         )
 
 
@@ -81,7 +85,7 @@ def _train_and_publish(
     epochs: int,
     training_dataset: Any,
     validation_dataset: Any,
-    class_weight: dict[int, float],
+    class_weight: dict[int, Any],
 ) -> None:
 
     save_callback = SaveBestModelInMemory(metric="val_loss" if validation_dataset else "loss")

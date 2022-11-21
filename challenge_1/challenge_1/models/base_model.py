@@ -100,8 +100,8 @@ class TrainableModel:
         history = self._model.fit(
             x=training_set,
             validation_data=validation_set,
-            epochs=epochs,
             batch_size=16,
+            epochs=epochs,
             verbose=verbose,
             callbacks=callbacks,
             class_weight=class_weight,
@@ -140,7 +140,7 @@ class TrainableModel:
         training_set: Any,
         validation_set: Any,
         test_set: Any | None = None,
-        epochs: int = 10,
+        epochs: int = 30,
         verbose: int = 1,
         callbacks: list[tf.keras.callbacks.Callback] | None = None,
         class_weight: dict[int, float] | None = None,
@@ -158,20 +158,21 @@ class TrainableModel:
         :return: The training history.
         """
         self._fine_tuned = True
-        self._model.trainable = False
-        # Fine-tune these last layers
-        fine_tune_from = -50 if len(self._model.layers) > 100 else -10
+        base_model = next((layer for layer in self._model.layers if layer.name == "base_model"))
+        fine_tune_at = len(base_model.layers) - 50
+        base_model.trainable = True
+        for layer in base_model.layers[:fine_tune_at]:
+            layer.trainable = False
 
-        # Freeze all the layers before the `fine_tune_from` layer
-        for layer in self._model.layers[fine_tune_from:]:
-            if not (
-                isinstance(layer, tf.keras.layers.BatchNormalization)
-                or isinstance(layer, tf.keras.layers.LayerNormalization)
+        # Freeze all the batchnorm layers
+        for layer in self._model.layers + base_model.layers:
+            if isinstance(layer, tf.keras.layers.BatchNormalization) or isinstance(
+                layer, tf.keras.layers.LayerNormalization
             ):
-                layer.trainable = True
+                layer.trainable = False
 
         self._model.compile(
-            optimizer=self._optimizer,
+            optimizer=self._optimizer.__class__(learning_rate=1e-5),
             loss=tf.keras.losses.CategoricalCrossentropy(),
             metrics=["accuracy", tf.metrics.Precision(), tf.metrics.Recall()],
         )
