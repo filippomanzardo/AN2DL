@@ -32,3 +32,9 @@
 **/data/
 
 **/.terraform*
+
+**/*submissions
+
+**/failed_models
+
+**/relevant_submissions
