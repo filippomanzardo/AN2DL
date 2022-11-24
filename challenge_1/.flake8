@@ -1,5 +1,11 @@
 [flake8]
-exclude = .venv,node_modules
+exclude =
+    .venv |
+    dataset |
+    *submissions |
+    **/cloud_entrypoint
+
+
 max-line-length = 100
 
 # see https://flake8.pycqa.org/en/latest/user/error-codes.html

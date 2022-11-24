@@ -1,0 +1,58 @@
+name: Checks
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./challenge_1
+    name: Checks
+    steps:
+    #----------------------------------------------
+    #       check-out repo and set-up python
+    #----------------------------------------------
+    - name: Check out repository
+      uses: actions/checkout@v3
+    - name: Set up python
+      id: setup-python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10.8'
+    #----------------------------------------------
+    #  -----  install & configure poetry  -----
+    #----------------------------------------------
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.2.2
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+    #----------------------------------------------
+    #       load cached venv if cache exists
+    #----------------------------------------------
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: challenge_1/.venv
+        key: venv-${{ runner.os }}-dev-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    #----------------------------------------------
+    # install dependencies
+    #----------------------------------------------
+    - name: Install dependencies
+      run: poetry install --only dev
+
+    #----------------------------------------------
+    # run checks
+    #----------------------------------------------
+    - run: poetry run black --diff --check $(git ls-files '*.py')
+    - run: poetry run mypy --strict $(git ls-files '*.py')
+    - run: poetry run isort $(git ls-files '*.py') --check-only --diff
+    - run: poetry run flake8 $(git ls-files '*.py') --count --show-source --statistics
+    - run: poetry run flake8 $(git ls-files '*.py') --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
