@@ -4,10 +4,14 @@ version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "challenge_2"}]
+
 
 [tool.poetry.dependencies]
 python = "~3.10"
+jupyter = "^1.0.0"
+numpy = "^1.23.5"
+scikit-learn = "^1.2.0"
+tensorflow-macos = "2.10"
 
 
 [tool.poetry.group.dev.dependencies]
