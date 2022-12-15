@@ -12,6 +12,7 @@ jupyter = "^1.0.0"
 numpy = "^1.23.5"
 scikit-learn = "^1.2.0"
 tensorflow-macos = "2.10"
+matplotlib = "^3.6.2"
 
 
 [tool.poetry.group.dev.dependencies]
