@@ -1,12 +1,21 @@
-import os
-import tensorflow as tf
 import itertools
+import os
 from typing import Any, Optional
+
+import tensorflow as tf
 
 
 class model:
     def __init__(self, path):
-        self.models = [tf.keras.models.load_model(os.path.join(path, f"SubmissionModel{i+1}"), custom_objects={"SparseCategoricalFocalLoss": SparseCategoricalFocalLoss}) for i in range(6)]
+        self.models = [
+            tf.keras.models.load_model(
+                os.path.join(path, f"SubmissionModel{i+1}"),
+                custom_objects={
+                    "SparseCategoricalFocalLoss": SparseCategoricalFocalLoss
+                },
+            )
+            for i in range(8)
+        ]
 
     def predict(self, X):
 
@@ -19,10 +28,15 @@ class model:
 _EPSILON = tf.keras.backend.epsilon()
 
 
-def sparse_categorical_focal_loss(y_true, y_pred, gamma, *,
-                                  class_weight: Optional[Any] = None,
-                                  from_logits: bool = False, axis: int = -1
-                                  ) -> tf.Tensor:
+def sparse_categorical_focal_loss(
+    y_true,
+    y_pred,
+    gamma,
+    *,
+    class_weight: Optional[Any] = None,
+    from_logits: bool = False,
+    axis: int = -1,
+) -> tf.Tensor:
     r"""Focal loss function for multiclass classification with integer labels.
     This loss function generalizes multiclass softmax cross-entropy by
     introducing a hyperparameter called the *focusing parameter* that allows
@@ -101,8 +115,7 @@ def sparse_categorical_focal_loss(y_true, y_pred, gamma, *,
 
     # Process class weight
     if class_weight is not None:
-        class_weight = tf.convert_to_tensor(class_weight,
-                                            dtype=tf.dtypes.float32)
+        class_weight = tf.convert_to_tensor(class_weight, dtype=tf.dtypes.float32)
 
     # Process prediction tensor
     y_pred = tf.convert_to_tensor(y_pred)
@@ -111,13 +124,15 @@ def sparse_categorical_focal_loss(y_true, y_pred, gamma, *,
         axis %= y_pred_rank
         if axis != y_pred_rank - 1:
             # Put channel axis last for sparse_softmax_cross_entropy_with_logits
-            perm = list(itertools.chain(range(axis),
-                                        range(axis + 1, y_pred_rank), [axis]))
+            perm = list(
+                itertools.chain(range(axis), range(axis + 1, y_pred_rank), [axis])
+            )
             y_pred = tf.transpose(y_pred, perm=perm)
     elif axis != -1:
         raise ValueError(
-            f'Cannot compute sparse categorical focal loss with axis={axis} on '
-            'a prediction tensor with statically unknown rank.')
+            f"Cannot compute sparse categorical focal loss with axis={axis} on "
+            "a prediction tensor with statically unknown rank."
+        )
     y_pred_shape = tf.shape(y_pred)
 
     # Process ground truth tensor
@@ -125,11 +140,16 @@ def sparse_categorical_focal_loss(y_true, y_pred, gamma, *,
     y_true_rank = y_true.shape.rank
 
     if y_true_rank is None:
-        raise NotImplementedError('Sparse categorical focal loss not supported '
-                                  'for target/label tensors of unknown rank')
+        raise NotImplementedError(
+            "Sparse categorical focal loss not supported "
+            "for target/label tensors of unknown rank"
+        )
 
-    reshape_needed = (y_true_rank is not None and y_pred_rank is not None and
-                      y_pred_rank != y_true_rank + 1)
+    reshape_needed = (
+        y_true_rank is not None
+        and y_pred_rank is not None
+        and y_pred_rank != y_true_rank + 1
+    )
     if reshape_needed:
         y_true = tf.reshape(y_true, [-1])
         y_pred = tf.reshape(y_pred, [-1, y_pred_shape[-1]])
@@ -154,8 +174,7 @@ def sparse_categorical_focal_loss(y_true, y_pred, gamma, *,
     loss = focal_modulation * xent_loss
 
     if class_weight is not None:
-        class_weight = tf.gather(class_weight, y_true, axis=0,
-                                 batch_dims=y_true_rank)
+        class_weight = tf.gather(class_weight, y_true, axis=0, batch_dims=y_true_rank)
         loss *= class_weight
 
     if reshape_needed:
@@ -218,8 +237,13 @@ class SparseCategoricalFocalLoss(tf.keras.losses.Loss):
         tensor and a prediction tensor and outputting a loss.
     """
 
-    def __init__(self, gamma, class_weight: Optional[Any] = None,
-                 from_logits: bool = False, **kwargs):
+    def __init__(
+        self,
+        gamma,
+        class_weight: Optional[Any] = None,
+        from_logits: bool = False,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.gamma = gamma
         self.class_weight = class_weight
@@ -236,8 +260,11 @@ class SparseCategoricalFocalLoss(tf.keras.losses.Loss):
             This layer's config.
         """
         config = super().get_config()
-        config.update(gamma=self.gamma, class_weight=self.class_weight,
-                      from_logits=self.from_logits)
+        config.update(
+            gamma=self.gamma,
+            class_weight=self.class_weight,
+            from_logits=self.from_logits,
+        )
         return config
 
     def call(self, y_true, y_pred):
@@ -259,7 +286,10 @@ class SparseCategoricalFocalLoss(tf.keras.losses.Loss):
             this layer's
             :meth:`~focal_loss.SparseCateogiricalFocalLoss.__call__` method.
         """
-        return sparse_categorical_focal_loss(y_true=y_true, y_pred=y_pred,
-                                             class_weight=self.class_weight,
-                                             gamma=self.gamma,
-                                             from_logits=self.from_logits)
+        return sparse_categorical_focal_loss(
+            y_true=y_true,
+            y_pred=y_pred,
+            class_weight=self.class_weight,
+            gamma=self.gamma,
+            from_logits=self.from_logits,
+        )
