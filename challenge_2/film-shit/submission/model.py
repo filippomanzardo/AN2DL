@@ -75,13 +75,7 @@ def sparse_categorical_focal_loss(y_true, y_pred, gamma, *,
     --------
     This function computes the per-example focal loss between a one-dimensional
     integer label vector and a two-dimensional prediction matrix:
-    >>> import numpy as np
-    >>> from focal_loss import sparse_categorical_focal_loss
-    >>> y_true = [0, 1, 2]
-    >>> y_pred = [[0.8, 0.1, 0.1], [0.2, 0.7, 0.1], [0.2, 0.2, 0.6]]
-    >>> loss = sparse_categorical_focal_loss(y_true, y_pred, gamma=2)
-    >>> np.set_printoptions(precision=3)
-    >>> print(loss.numpy())
+
     [0.009 0.032 0.082]
     Warnings
     --------
@@ -94,7 +88,6 @@ def sparse_categorical_focal_loss(y_true, y_pred, gamma, *,
         dense object detection. IEEE Transactions on Pattern Analysis and
         Machine Intelligence, 2018.
         (`DOI <https://doi.org/10.1109/TPAMI.2018.2858826>`__)
-        (`arXiv preprint <https://arxiv.org/abs/1708.02002>`__)
     See Also
     --------
     :meth:`~focal_loss.SparseCategoricalFocalLoss`
@@ -203,11 +196,7 @@ class SparseCategoricalFocalLoss(tf.keras.losses.Loss):
     integer class labels `y_true` and a tensor of model predictions `y_pred` and
     returns a scalar tensor obtained by reducing the per-example focal loss (the
     default reduction is a batch-wise average).
-    >>> from focal_loss import SparseCategoricalFocalLoss
-    >>> loss_func = SparseCategoricalFocalLoss(gamma=2)
-    >>> y_true = [0, 1, 2]
-    >>> y_pred = [[0.8, 0.1, 0.1], [0.2, 0.7, 0.1], [0.2, 0.2, 0.6]]
-    >>> loss_func(y_true, y_pred)
+
     <tf.Tensor: shape=(), dtype=float32, numpy=0.040919524>
     Use this class in the :mod:`tf.keras` API like any other multiclass
     classification loss function class that accepts integer labels found in
