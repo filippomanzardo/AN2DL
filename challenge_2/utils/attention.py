@@ -4,17 +4,17 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.layers import Dense, Lambda, Dot, Activation, Concatenate, Layer
 
 # KERAS_ATTENTION_DEBUG: If set to 1. Will switch to debug mode.
-# In debug mode, the class Attention is no longer a Keras layer.
+# In debug mode, the class FilmAttention is no longer a Keras layer.
 # What it means in practice is that we can have access to the internal values
 # of each tensor. If we don't use debug, Keras treats the object
 # as a layer and we can only get the final output.
 debug_flag = int(os.environ.get('KERAS_ATTENTION_DEBUG', 0))
 
 
-class Attention(object if debug_flag else Layer):
+class FilmAttention(object if debug_flag else Layer):
 
     def __init__(self, units=128, **kwargs):
-        super(Attention, self).__init__(**kwargs)
+        super(FilmAttention, self).__init__(**kwargs)
         self.units = units
 
     # noinspection PyAttributeOutsideInit
@@ -30,7 +30,7 @@ class Attention(object if debug_flag else Layer):
             self.attention_vector = Dense(self.units, use_bias=False, activation='tanh', name='attention_vector')
         if not debug_flag:
             # debug: the call to build() is done in call().
-            super(Attention, self).build(input_shape)
+            super(FilmAttention, self).build(input_shape)
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], self.units
@@ -39,7 +39,7 @@ class Attention(object if debug_flag else Layer):
         if debug_flag:
             return self.call(inputs, training, **kwargs)
         else:
-            return super(Attention, self).__call__(inputs, training, **kwargs)
+            return super(FilmAttention, self).__call__(inputs, training, **kwargs)
 
     # noinspection PyUnusedLocal
     def call(self, inputs, training=None, **kwargs):
@@ -73,6 +73,6 @@ class Attention(object if debug_flag else Layer):
         Returns the config of a the layer. This is used for saving and loading from a model
         :return: python dictionary with specs to rebuild layer
         """
-        config = super(Attention, self).get_config()
+        config = super(FilmAttention, self).get_config()
         config.update({'units': self.units})
         return config
