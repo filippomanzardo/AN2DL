@@ -11,3 +11,15 @@ Being a classification problem, given an image, the goal is to predict
 the correct class label.
 
 ![](challenge_1/docs/plant_classification.png)
+
+
+## Challenge 2 - Time Series Classification ⏳🛁𒀗
+
+In this homework we were required to classify time series data,
+which are divided into categories that we did not had any information about.
+Being a classification problem, given a time series, the goal is to predict
+the correct class label.
+
+
+![](challenge_2/docs/challenge_2.png)
+

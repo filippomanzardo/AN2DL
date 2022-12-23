@@ -38,3 +38,5 @@
 **/failed_models
 
 **/relevant_submissions
+
+**/tensorboard-logs
